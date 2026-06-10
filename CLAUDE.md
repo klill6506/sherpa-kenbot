@@ -26,18 +26,35 @@ Ken is a CPA learning to code. Keep code readable; comment the non-obvious parts
 
 ## Architecture (current)
 
+- `src/state/stateMachine.ts` — PURE state machine (no React, no timers):
+  8 states, `reduce(current, event)`. Timed states (greet/celebrate/point-*)
+  auto-return to idle; stale timers are ignored. Unit-tested.
+- `src/hooks/useKenBotState.ts` — React plumbing around the machine: holds the
+  live state, schedules/cancels timed-state timers. Also `useFakeTalk` (random
+  cartoon lip-flap for the talking state until Phase 4's real audio).
 - `src/character/Character.tsx` — pure presentational SVG. Takes `appearance`
   (colors/hair/glasses) + `pose` (mouthOpen, eyesOpen, browLift, pupilOffset)
-  and just renders. No timers, no state. Uses `useId` for SVG def ids so two
-  KenBots on one page don't collide.
+  + `state`. Two-joint arms (shoulder + elbow groups). Gross motion is plain
+  CSS: static per-state joint angles inline (tweened by CSS transitions) plus
+  keyframe animations in kenbot.css (wave/bounce/waggle) keyed off
+  `kb-state-*` classes. Uses `useId` for SVG def ids so two KenBots on one
+  page don't collide.
+  **IMPORTANT LESSON**: do NOT rotate SVG joints with the motion library — it
+  manages transform-origin itself (bounding-box relative) and every joint
+  spins around the wrong point. Plain CSS + `transform-box: view-box` pivots
+  exactly at viewBox coordinates. Motion is only used for the HTML-level
+  breathing bob in KenBot.tsx.
 - `src/character/appearance.ts` — `CharacterAppearance` type, Ken's default look,
   and `shade()` for deriving shadow/blush tones from base colors.
 - `src/hooks/useIdleLife.ts` — blink + glance timers (self-rescheduling random
   setTimeout chains).
-- `src/KenBot.tsx` — the real component: fixed positioning, breathing, feeds pose
-  values into Character. The state machine will live at this layer (Phase 2).
-- `demo/` — playground: big Character preview + control panel (colors, hair,
-  glasses, pose sliders) + a true-size KenBot in the corner.
+- `src/KenBot.tsx` — the real component: fixed positioning, breathing, runs the
+  state machine, exposes `KenBotHandle` (celebrate/pointLeft/pointRight/setState)
+  via the React 19 ref prop, per-state face table (brows/mouth/gaze), greets on
+  mount, `onStateChange` callback for hosts.
+- `demo/` — playground: big Character preview + state trigger buttons + control
+  panel (colors, hair, glasses, pose sliders) + a true-size KenBot in the corner
+  driven through its ref.
 
 ## Character design
 
@@ -68,7 +85,7 @@ earlier design — do not reuse it.
       *(approved by Ken 2026-06-10; his picks baked into defaultAppearance)*
 - [ ] **Phase 2** — Full animation state machine (idle/greet/listening/thinking/talking/
       celebrate/point-left/point-right) + demo buttons for every state. Imperative ref
-      handle (`KenBotHandle`) for celebrate/point.
+      handle (`KenBotHandle`) for celebrate/point. *(built + tested; awaiting Ken's review)*
 - [ ] **Phase 3** — Speech-bubble chat panel (~320px, anchored above him), message history,
       streaming text, mute toggle persisted in localStorage, pluggable backend + demo mock.
 - [ ] **Phase 4** — ElevenLabs TTS, Web Audio lip sync, sentence queue, DRF proxy example.

@@ -1,11 +1,14 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   Character,
+  KENBOT_STATES,
   KenBot,
   defaultAppearance,
   type CharacterAppearance,
   type CharacterPose,
   type HairStyle,
+  type KenBotHandle,
+  type KenBotState,
 } from 'sherpa-kenbot';
 
 /**
@@ -42,6 +45,18 @@ export function App(): React.JSX.Element {
   const [pose, setPose] = useState<CharacterPose>(defaultPose);
   const [sizeScale, setSizeScale] = useState(1);
 
+  // State machine demo: buttons drive BOTH the big preview (statically, so a
+  // pose can be studied) and the corner KenBot via its imperative ref (the
+  // real machine — timed states fall back to idle on their own there).
+  const [previewState, setPreviewState] = useState<KenBotState>('idle');
+  const [cornerState, setCornerState] = useState<KenBotState>('idle');
+  const botRef = useRef<KenBotHandle>(null);
+
+  const triggerState = (s: KenBotState): void => {
+    setPreviewState(s);
+    botRef.current?.setState(s);
+  };
+
   const setColor = (key: keyof CharacterAppearance, value: string): void => {
     setAppearance((prev) => ({ ...prev, [key]: value }));
   };
@@ -55,10 +70,30 @@ export function App(): React.JSX.Element {
 
       <main className="playground__main">
         <section className="stage">
-          <Character className="stage__character" appearance={appearance} pose={pose} />
+          <Character className="stage__character" appearance={appearance} pose={pose} state={previewState} />
         </section>
 
         <aside className="panel">
+          <h2>
+            Animation state <span className="panel__badge">corner: {cornerState}</span>
+          </h2>
+          <div className="panel__states">
+            {KENBOT_STATES.map((s) => (
+              <button
+                key={s}
+                type="button"
+                className={`panel__state-btn${previewState === s ? ' panel__state-btn--active' : ''}`}
+                onClick={() => triggerState(s)}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+          <p className="panel__hint">
+            Buttons pose the big preview and trigger the corner KenBot. In the corner, greet / celebrate /
+            point return to idle by themselves — that's the state machine working.
+          </p>
+
           <h2>Appearance</h2>
           <div className="panel__grid">
             {COLOR_FIELDS.map(({ key, label }) => (
@@ -194,7 +229,7 @@ export function App(): React.JSX.Element {
       </main>
 
       {/* The real thing, exactly as a host app would mount it */}
-      <KenBot appearance={appearance} sizeScale={sizeScale} />
+      <KenBot ref={botRef} appearance={appearance} sizeScale={sizeScale} onStateChange={setCornerState} />
     </div>
   );
 }

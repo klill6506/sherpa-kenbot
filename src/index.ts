@@ -1,5 +1,8 @@
 export { KenBot } from './KenBot';
-export type { KenBotProps, KenBotPosition } from './KenBot';
+export type { KenBotProps, KenBotPosition, KenBotHandle } from './KenBot';
+
+export { KENBOT_STATES, TIMED_STATE_DURATIONS } from './state/stateMachine';
+export type { KenBotState } from './state/stateMachine';
 
 // The raw drawing is exported too so the demo playground (and any curious
 // host app) can render him at any size with full pose control.

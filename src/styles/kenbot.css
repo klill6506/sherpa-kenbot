@@ -36,3 +36,76 @@
   height: var(--kb-height, 160px);
   width: auto;
 }
+
+/*
+ * Keyframe gestures. Static per-state joint angles are inline styles set by
+ * Character.tsx; these animations layer the showy moves on top. CSS
+ * animations override inline transforms while they play, so each animated
+ * group's base angle for that state is 0.
+ *
+ * Every group already carries transform-box: view-box and its pivot as an
+ * inline transform-origin, which the animations inherit.
+ */
+
+/* Greet: raise the right arm and hold while the forearm waves */
+.kb-state-greet .kb-arm-right {
+  animation: kb-wave-arm 1.9s ease-in-out;
+}
+
+.kb-state-greet .kb-forearm-right {
+  animation: kb-wave-forearm 1.9s ease-in-out;
+}
+
+@keyframes kb-wave-arm {
+  0% { transform: rotate(0deg); }
+  18% { transform: rotate(-145deg); }
+  78% { transform: rotate(-145deg); }
+  100% { transform: rotate(0deg); }
+}
+
+@keyframes kb-wave-forearm {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(-22deg); }
+  40% { transform: rotate(18deg); }
+  55% { transform: rotate(-22deg); }
+  70% { transform: rotate(18deg); }
+  85% { transform: rotate(0deg); }
+  100% { transform: rotate(0deg); }
+}
+
+/* Celebrate: a couple of happy hops (arm raise comes from the static angles) */
+.kb-state-celebrate .kb-figure {
+  animation: kb-bounce 1s ease-out 2;
+}
+
+@keyframes kb-bounce {
+  0% { transform: translateY(0); }
+  25% { transform: translateY(-7px); }
+  50% { transform: translateY(0); }
+  75% { transform: translateY(-5px); }
+  100% { transform: translateY(0); }
+}
+
+/* Talking: an occasional gentle hand waggle while he speaks */
+.kb-state-talking .kb-forearm-right {
+  animation: kb-talk-waggle 2.6s ease-in-out infinite;
+}
+
+@keyframes kb-talk-waggle {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(9deg); }
+  50% { transform: rotate(0deg); }
+  75% { transform: rotate(-7deg); }
+  100% { transform: rotate(0deg); }
+}
+
+/*
+ * Reduced motion: drop the theatrics (wave/bounce/waggle). Joints still
+ * transition to their static pose — a pointing arm carries meaning — and
+ * blinks stay (they're in the eye transition, not an animation).
+ */
+@media (prefers-reduced-motion: reduce) {
+  .kb-svg * {
+    animation: none !important;
+  }
+}
