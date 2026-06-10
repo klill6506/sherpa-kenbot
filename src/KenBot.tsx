@@ -12,6 +12,9 @@ import { useBlink, useGlance } from './hooks/useIdleLife';
 import { useFakeTalk, useKenBotState } from './hooks/useKenBotState';
 import { useWander } from './hooks/useWander';
 import type { KenBotState } from './state/stateMachine';
+import { createSentenceSplitter } from './voice/sentences';
+import type { SentenceSplitter } from './voice/sentences';
+import { useSpeech } from './voice/useSpeech';
 import './styles/kenbot.css';
 
 /**
@@ -77,6 +80,13 @@ export interface KenBotProps {
    * as JSON and streams the text response into the bubble.
    */
   askEndpoint?: string;
+  /**
+   * Voice: a URL on the HOST'S OWN backend that proxies to ElevenLabs
+   * (see /server-examples for the Django version). Gets POST { text } per
+   * sentence, must return audio (mp3). The ElevenLabs API key lives on that
+   * server and NEVER in this package. Omit for text-only.
+   */
+  ttsEndpoint?: string;
 }
 
 /** Mute persists across sessions; voice arrives in Phase 4 but the choice sticks now. */
@@ -127,6 +137,7 @@ export function KenBot({
   greeting = "Hi! I'm Ken. What can I help you with?",
   onAsk,
   askEndpoint,
+  ttsEndpoint,
 }: KenBotProps): React.JSX.Element {
   // prefers-reduced-motion: keep blinks, drop bounce/gestures (the gesture
   // states still snap to their pose — see Character — but nothing waves or
@@ -152,6 +163,13 @@ export function KenBot({
     });
   };
 
+  // ----- Voice -----
+  const speech = useSpeech({ ttsEndpoint, muted });
+  // One splitter per answer: streamed chunks go in, complete sentences come
+  // out and are queued for TTS immediately — that's what makes him start
+  // talking after the FIRST sentence instead of after the whole answer.
+  const splitterRef = useRef<SentenceSplitter | null>(null);
+
   // onAsk wins if both backends are provided.
   const ask = useMemo<AskFunction | null>(() => {
     if (onAsk) return onAsk;
@@ -159,26 +177,52 @@ export function KenBot({
     return null;
   }, [onAsk, askEndpoint]);
 
-  const { messages, status, send } = useChat({ ask, greeting });
+  const { messages, status, send } = useChat({
+    ask,
+    greeting,
+    callbacks: {
+      onAnswerStart: () => {
+        splitterRef.current = createSentenceSplitter();
+      },
+      onChunk: (chunk) => {
+        for (const sentence of splitterRef.current?.push(chunk) ?? []) {
+          speech.speak(sentence);
+        }
+      },
+      onAnswerDone: () => {
+        const leftover = splitterRef.current?.flush();
+        if (leftover) speech.speak(leftover);
+        splitterRef.current = null;
+      },
+    },
+  });
 
   // Map the conversation onto the state machine — but only on TRANSITIONS.
-  // Reacting to (open, status) values on every render would stomp gestures
-  // like the mount greet or a host-triggered celebrate.
-  const prevChat = useRef<{ open: boolean; status: ChatStatus }>({ open: false, status: 'idle' });
+  // Reacting to the values on every render would stomp gestures like the
+  // mount greet or a host-triggered celebrate. He keeps "talking" while
+  // audio is still playing, even after the text finished streaming.
+  const speaking = speech.speaking;
+  const prevChat = useRef<{ open: boolean; status: ChatStatus; speaking: boolean }>({
+    open: false,
+    status: 'idle',
+    speaking: false,
+  });
   useEffect(() => {
     const prev = prevChat.current;
-    if (prev.open === chatOpen && prev.status === status) return;
-    prevChat.current = { open: chatOpen, status };
+    if (prev.open === chatOpen && prev.status === status && prev.speaking === speaking) return;
+    prevChat.current = { open: chatOpen, status, speaking };
     if (status === 'thinking') request('thinking');
-    else if (status === 'streaming') request('talking');
+    else if (status === 'streaming' || speaking) request('talking');
     else request(chatOpen ? 'listening' : 'idle');
-  }, [chatOpen, status, request]);
+  }, [chatOpen, status, speaking, request]);
 
   // Idle life: always blink; only glance around when idle or strolling (a
   // thinking or pointing gaze is part of the pose and shouldn't wander).
   const eyesOpen = useBlink();
   const glance = useGlance((state === 'idle' || state === 'walking') && !reducedMotion);
-  const fakeTalkMouth = useFakeTalk(state === 'talking');
+  // The fake lip-flap only fills in when there's no real audio to sync to
+  // (no ttsEndpoint, muted, or TTS quietly failed).
+  const fakeTalkMouth = useFakeTalk(state === 'talking' && !speaking);
 
   // Occasional strolls along the screen edge. From a right corner he walks
   // left into the page, from a left corner he walks right.
@@ -235,8 +279,16 @@ export function KenBot({
           status={status}
           muted={muted}
           onToggleMute={toggleMute}
-          onSend={send}
-          onClose={() => setChatOpen(false)}
+          onSend={(text) => {
+            // A submit is a real user gesture — the moment the browser lets
+            // us start audio. unlock() here so the answer can be spoken.
+            speech.unlock();
+            send(text);
+          }}
+          onClose={() => {
+            speech.stop(); // closing the bubble cuts him off mid-sentence
+            setChatOpen(false);
+          }}
         />
       )}
 
@@ -244,7 +296,11 @@ export function KenBot({
       <button
         type="button"
         className="kb-trigger"
-        onClick={() => setChatOpen((open) => !open)}
+        onClick={() => {
+          speech.unlock(); // user gesture — see autoplay note in useSpeech
+          if (chatOpen) speech.stop();
+          setChatOpen((open) => !open);
+        }}
         aria-label={chatOpen ? `Close ${name}'s chat` : `Ask ${name} for help`}
         aria-expanded={chatOpen}
       >
@@ -258,7 +314,10 @@ export function KenBot({
             appearance={look}
             state={state}
             pose={{
-              mouthOpen: state === 'talking' ? fakeTalkMouth : statePose.mouthOpen,
+              // Talking mouth: real audio amplitude when he's speaking,
+              // the fake lip-flap otherwise, the state's pose when not talking.
+              mouthOpen:
+                state === 'talking' ? (speaking ? speech.mouthOpen : fakeTalkMouth) : statePose.mouthOpen,
               eyesOpen,
               browLift: statePose.browLift,
               pupilOffset: statePose.pupil ?? glance,

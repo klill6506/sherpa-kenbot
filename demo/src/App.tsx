@@ -46,6 +46,9 @@ export function App(): React.JSX.Element {
   const [pose, setPose] = useState<CharacterPose>(defaultPose);
   const [sizeScale, setSizeScale] = useState(1);
   const [wander, setWander] = useState(true);
+  // Voice: empty = text-only. Run `npm run mock-tts` and paste
+  // http://localhost:8787/tts here to test lip sync offline (robot babble).
+  const [ttsUrl, setTtsUrl] = useState('');
 
   // State machine demo: buttons drive BOTH the big preview (statically, so a
   // pose can be studied) and the corner KenBot via its imperative ref (the
@@ -209,6 +212,15 @@ export function App(): React.JSX.Element {
             <span>Wander (strolls off every 6–16s while idle)</span>
           </label>
           <label className="panel__field">
+            <span>TTS endpoint (blank = text-only; try `npm run mock-tts` → http://localhost:8787/tts)</span>
+            <input
+              type="text"
+              value={ttsUrl}
+              placeholder="http://localhost:8787/tts"
+              onChange={(e) => setTtsUrl(e.target.value)}
+            />
+          </label>
+          <label className="panel__field">
             <span>Size scale: {sizeScale.toFixed(2)}</span>
             <input
               type="range"
@@ -244,6 +256,7 @@ export function App(): React.JSX.Element {
         name="Ken"
         greeting="Hi! I'm Ken, the demo bot. Ask me anything — I mostly echo."
         onAsk={mockAsk}
+        ttsEndpoint={ttsUrl.trim() || undefined}
       />
     </div>
   );

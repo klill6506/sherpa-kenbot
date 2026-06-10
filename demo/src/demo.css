@@ -101,6 +101,13 @@ body {
   width: 100%;
 }
 
+.panel__field input[type='text'] {
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 13px;
+}
+
 .panel__field select {
   padding: 6px 8px;
   border-radius: 6px;

@@ -17,7 +17,16 @@ export type ChatStatus = 'idle' | 'thinking' | 'streaming';
 const ERROR_REPLY = "Sorry — I couldn't get an answer just now. Please try again in a moment.";
 const NO_BACKEND_REPLY = "I'm not wired up to a help backend yet, so I can't answer — but the chat works!";
 
-export function useChat(args: { ask: AskFunction | null; greeting: string }): {
+export interface ChatStreamCallbacks {
+  /** A fresh answer is about to start streaming. */
+  onAnswerStart?: () => void;
+  /** A chunk of answer text just arrived (the voice layer splits these into sentences). */
+  onChunk?: (chunk: string) => void;
+  /** The answer finished (or failed) — flush any leftover partial sentence. */
+  onAnswerDone?: () => void;
+}
+
+export function useChat(args: { ask: AskFunction | null; greeting: string; callbacks?: ChatStreamCallbacks }): {
   messages: KenBotMessage[];
   status: ChatStatus;
   send: (text: string) => void;
@@ -31,6 +40,10 @@ export function useChat(args: { ask: AskFunction | null; greeting: string }): {
   const messagesRef = useRef(messages);
   messagesRef.current = messages;
   const busyRef = useRef(false);
+  // Callbacks live in a ref so freshly-rendered closures are always called
+  // (the send callback itself only re-creates when `ask` changes).
+  const callbacksRef = useRef(args.callbacks);
+  callbacksRef.current = args.callbacks;
 
   const send = useCallback(
     (text: string): void => {
@@ -50,11 +63,13 @@ export function useChat(args: { ask: AskFunction | null; greeting: string }): {
       setStatus('thinking');
 
       void (async () => {
+        callbacksRef.current?.onAnswerStart?.();
         try {
           let answer = '';
           let started = false;
           for await (const chunk of toStream(ask(trimmed, history))) {
             answer += chunk;
+            callbacksRef.current?.onChunk?.(chunk);
             if (!started) {
               started = true;
               setStatus('streaming');
@@ -72,6 +87,7 @@ export function useChat(args: { ask: AskFunction | null; greeting: string }): {
           // Never surface raw errors to the end user.
           setMessages((m) => [...m, { role: 'assistant', content: ERROR_REPLY }]);
         } finally {
+          callbacksRef.current?.onAnswerDone?.();
           setStatus('idle');
           busyRef.current = false;
         }

@@ -68,6 +68,24 @@ Ken is a CPA learning to code. Keep code readable; comment the non-obvious parts
   tail pointing at him; flips below for top corners). Header = name + mute +
   close; typing dots while thinking; auto-scroll; themed via --kb-primary /
   --kb-accent from the `colors` prop.
+- `src/voice/sentences.ts` — incremental sentence splitter for streamed answers
+  (emit each sentence the moment it completes → speech starts after sentence 1,
+  not after the whole answer). Force-splits punctuation-less run-ons at ~280
+  chars. Unit-tested (decimals safe, word-boundary force splits, flush).
+- `src/voice/useSpeech.ts` — the voice engine. Per sentence: POST {text} to
+  `ttsEndpoint` → decode → play via Web Audio. Fetches run in PARALLEL, clips
+  play IN ORDER. An AnalyserNode measures RMS loudness per animation frame →
+  mouthOpen (noise gate + fast-attack/slow-release smoothing). A `generation`
+  counter invalidates stale loops on stop(). Graceful: no endpoint / muted /
+  2 consecutive failures / blocked AudioContext = silent text-only, never an
+  error. AUTOPLAY: browsers need a user gesture before audio — `unlock()` is
+  called from the trigger click and chat submit handlers.
+- `demo/mock-tts-server.mjs` — `npm run mock-tts` → http://localhost:8787/tts
+  speaks robotic babble (WAV, syllable-pulsed loudness) so the whole voice
+  pipeline + lip sync is testable offline with zero keys.
+- `server-examples/django/` — the reference ElevenLabs proxy (DRF APIView,
+  streams mp3, key/voice from env, auth + 60/min throttle, .env.example with
+  Ken's voice ID).
 - `src/KenBot.tsx` — the real component: fixed positioning, breathing, runs the
   state machine, exposes `KenBotHandle` (celebrate/pointLeft/pointRight/setState)
   via the React 19 ref prop, per-state face table (brows/mouth/gaze), greets on
@@ -111,10 +129,11 @@ earlier design — do not reuse it.
       celebrate/point-left/point-right) + demo buttons for every state. Imperative ref
       handle (`KenBotHandle`) for celebrate/point. *(approved 2026-06-10; `walking` +
       wander system added on Ken's request the same day)*
-- [ ] **Phase 3** — Speech-bubble chat panel (~320px, anchored above him), message history,
+- [x] **Phase 3** — Speech-bubble chat panel (~320px, anchored above him), message history,
       streaming text, mute toggle persisted in localStorage, pluggable backend + demo mock.
-      *(built + tested; awaiting Ken's review)*
+      *(approved 2026-06-10)*
 - [ ] **Phase 4** — ElevenLabs TTS, Web Audio lip sync, sentence queue, DRF proxy example.
+      *(built + tested; awaiting Ken's review)*
 - [ ] **Phase 5** — Distribution packaging (github: install), README drop-in guide
       (Vite/React/Tailwind host + Django wiring).
 
