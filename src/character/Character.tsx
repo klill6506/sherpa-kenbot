@@ -71,8 +71,8 @@ export function Character({ appearance, pose, className }: CharacterProps): Reac
   } = appearance;
 
   const skinShadow = shade(skinColor, 0.18);
-  const blushColor = shade(skinColor, 0.32); // warm tone for cheeks/nose hints
-  const browColor = shade(hairColor, 0.45); // brows read better a bit darker than hair
+  const blushColor = shade(skinColor, 0.16); // warm tone for cheeks/nose hints
+  const browColor = shade(hairColor, 0.28); // brows read better a bit darker than hair
   const hairShadow = shade(hairColor, 0.15);
 
   // Pupils travel at most ~3px so they always stay inside the eye whites.
@@ -114,34 +114,34 @@ export function Character({ appearance, pose, className }: CharacterProps): Reac
           Phase 2 state machine can rotate them (wave, celebrate, point).
           Short-sleeve shirt: a shirt-colored sleeve stub from the shoulder,
           then a slightly thinner bare forearm down to the hand. */}
-      <g className="kb-arm-left" style={{ transformOrigin: '72px 146px' }}>
+      <g className="kb-arm-left" style={{ transformOrigin: '70px 143px' }}>
         <path
-          d="M 60 166 C 57 174 56 184 57 192"
+          d="M 58 165 C 55 173 54 184 55 192"
           fill="none"
           stroke={skinColor}
           strokeWidth="11"
           strokeLinecap="round"
         />
-        <circle cx="58" cy="197" r="7.5" fill={skinColor} />
+        <circle cx="56" cy="197" r="7.5" fill={skinColor} />
         <path
-          d="M 72 146 C 64 152 60 159 59 167"
+          d="M 70 143 C 62 150 58 158 57 166"
           fill="none"
           stroke={shirtColor}
           strokeWidth="15"
           strokeLinecap="round"
         />
       </g>
-      <g className="kb-arm-right" style={{ transformOrigin: '148px 146px' }}>
+      <g className="kb-arm-right" style={{ transformOrigin: '150px 143px' }}>
         <path
-          d="M 160 166 C 163 174 164 184 163 192"
+          d="M 162 165 C 165 173 166 184 165 192"
           fill="none"
           stroke={skinColor}
           strokeWidth="11"
           strokeLinecap="round"
         />
-        <circle cx="162" cy="197" r="7.5" fill={skinColor} />
+        <circle cx="164" cy="197" r="7.5" fill={skinColor} />
         <path
-          d="M 148 146 C 156 152 160 159 161 167"
+          d="M 150 143 C 158 150 162 158 163 166"
           fill="none"
           stroke={shirtColor}
           strokeWidth="15"
@@ -161,7 +161,7 @@ export function Character({ appearance, pose, className }: CharacterProps): Reac
       {/* Torso: white shirt, collar, black tie */}
       <g className="kb-body">
         <path
-          d="M 64 200 L 64 162 C 64 142 84 131 110 131 C 136 131 156 142 156 162 L 156 200 Z"
+          d="M 64 200 L 64 165 C 61 140 80 129 110 129 C 140 129 159 140 156 165 L 156 200 Z"
           fill={shirtColor}
         />
         {/* Collar wings */}
@@ -200,8 +200,8 @@ export function Character({ appearance, pose, className }: CharacterProps): Reac
         />
 
         {/* Cheek blush */}
-        <ellipse cx="78" cy="94" rx="8" ry="4.5" fill={blushColor} opacity="0.35" />
-        <ellipse cx="142" cy="94" rx="8" ry="4.5" fill={blushColor} opacity="0.35" />
+        <ellipse cx="78" cy="94" rx="8" ry="4.5" fill={blushColor} opacity="0.3" />
+        <ellipse cx="142" cy="94" rx="8" ry="4.5" fill={blushColor} opacity="0.3" />
 
         {/* Eyebrows — the group slides up with browLift */}
         <g className="kb-eyebrows" transform={`translate(0 ${browY})`}>
