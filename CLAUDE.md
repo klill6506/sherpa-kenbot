@@ -132,8 +132,8 @@ earlier design — do not reuse it.
 - [x] **Phase 3** — Speech-bubble chat panel (~320px, anchored above him), message history,
       streaming text, mute toggle persisted in localStorage, pluggable backend + demo mock.
       *(approved 2026-06-10)*
-- [ ] **Phase 4** — ElevenLabs TTS, Web Audio lip sync, sentence queue, DRF proxy example.
-      *(built + tested; awaiting Ken's review)*
+- [x] **Phase 4** — ElevenLabs TTS, Web Audio lip sync, sentence queue, DRF proxy example.
+      *(approved 2026-06-10 — Ken heard his real voice via `npm run real-tts`)*
 - [ ] **Phase 5** — Distribution packaging (github: install), README drop-in guide
       (Vite/React/Tailwind host + Django wiring).
 
