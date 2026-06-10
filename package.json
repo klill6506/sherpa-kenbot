@@ -20,6 +20,7 @@
   "scripts": {
     "dev": "npm --prefix demo run dev",
     "mock-tts": "node demo/mock-tts-server.mjs",
+    "real-tts": "node demo/elevenlabs-tts-server.mjs",
     "setup": "npm install && npm --prefix demo install",
     "build": "vite build",
     "typecheck": "tsc --noEmit",

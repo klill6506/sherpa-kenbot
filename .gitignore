@@ -11,3 +11,6 @@ Ken Bot/
 
 # Local Claude Code permissions (machine-specific)
 .claude/settings.local.json
+
+# Secrets — the ElevenLabs API key lives here for `npm run real-tts`
+.env

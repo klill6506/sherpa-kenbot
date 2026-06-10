@@ -46,9 +46,14 @@ export function App(): React.JSX.Element {
   const [pose, setPose] = useState<CharacterPose>(defaultPose);
   const [sizeScale, setSizeScale] = useState(1);
   const [wander, setWander] = useState(true);
-  // Voice: empty = text-only. Run `npm run mock-tts` and paste
-  // http://localhost:8787/tts here to test lip sync offline (robot babble).
-  const [ttsUrl, setTtsUrl] = useState('');
+  // Voice: empty = text-only. `npm run mock-tts` → http://localhost:8787/tts
+  // (robot babble) or `npm run real-tts` → http://localhost:8788/tts (real
+  // ElevenLabs voice, needs .env). Persisted so reloads don't clear it.
+  const [ttsUrl, setTtsUrl] = useState(() => localStorage.getItem('demo-tts-url') ?? '');
+  const updateTtsUrl = (value: string): void => {
+    setTtsUrl(value);
+    localStorage.setItem('demo-tts-url', value);
+  };
 
   // State machine demo: buttons drive BOTH the big preview (statically, so a
   // pose can be studied) and the corner KenBot via its imperative ref (the
@@ -212,12 +217,14 @@ export function App(): React.JSX.Element {
             <span>Wander (strolls off every 6–16s while idle)</span>
           </label>
           <label className="panel__field">
-            <span>TTS endpoint (blank = text-only; try `npm run mock-tts` → http://localhost:8787/tts)</span>
+            <span>
+              TTS endpoint (blank = text-only · mock-tts → :8787/tts · real-tts → :8788/tts)
+            </span>
             <input
               type="text"
               value={ttsUrl}
-              placeholder="http://localhost:8787/tts"
-              onChange={(e) => setTtsUrl(e.target.value)}
+              placeholder="http://localhost:8788/tts"
+              onChange={(e) => updateTtsUrl(e.target.value)}
             />
           </label>
           <label className="panel__field">
