@@ -135,7 +135,9 @@ earlier design — do not reuse it.
 - [x] **Phase 4** — ElevenLabs TTS, Web Audio lip sync, sentence queue, DRF proxy example.
       *(approved 2026-06-10 — Ken heard his real voice via `npm run real-tts`)*
 - [ ] **Phase 5** — Distribution packaging (github: install), README drop-in guide
-      (Vite/React/Tailwind host + Django wiring).
+      (Vite/React/Tailwind host + Django wiring). *(built; install verified from a
+      fresh temp project via git+file — prepare builds dist, types ship, imports
+      resolve. Awaiting Ken's final review)*
 
 ## Memory discipline (standing instruction)
 
