@@ -96,6 +96,15 @@ export function App(): React.JSX.Element {
             <span>Glasses</span>
           </label>
 
+          <label className="panel__field panel__field--row">
+            <input
+              type="checkbox"
+              checked={appearance.pocketProtector}
+              onChange={(e) => setAppearance((prev) => ({ ...prev, pocketProtector: e.target.checked }))}
+            />
+            <span>Pocket protector</span>
+          </label>
+
           <h2>Pose (preview only)</h2>
           <label className="panel__field">
             <span>Mouth open: {pose.mouthOpen.toFixed(2)}</span>

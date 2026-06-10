@@ -19,6 +19,8 @@ export interface CharacterAppearance {
   shoeColor: string;
   /** Ken doesn't wear glasses, but the toggle exists for experimenting. */
   glasses: boolean;
+  /** Pens at the ready in a shirt-pocket protector. The CPA touch. */
+  pocketProtector: boolean;
 }
 
 /** Ken's default look: light blond very short hair, no glasses, white shirt + black tie. */
@@ -32,6 +34,7 @@ export const defaultAppearance: CharacterAppearance = {
   pantsColor: '#3F4756',
   shoeColor: '#4D3A2C',
   glasses: false,
+  pocketProtector: true,
 };
 
 /**

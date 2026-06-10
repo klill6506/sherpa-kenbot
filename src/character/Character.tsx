@@ -57,8 +57,18 @@ export function Character({ appearance, pose, className }: CharacterProps): Reac
   const uid = useId();
   const mouthClipId = `kb-mouth-clip-${uid}`;
 
-  const { skinColor, hairColor, hairStyle, eyeColor, shirtColor, tieColor, pantsColor, shoeColor, glasses } =
-    appearance;
+  const {
+    skinColor,
+    hairColor,
+    hairStyle,
+    eyeColor,
+    shirtColor,
+    tieColor,
+    pantsColor,
+    shoeColor,
+    glasses,
+    pocketProtector,
+  } = appearance;
 
   const skinShadow = shade(skinColor, 0.18);
   const blushColor = shade(skinColor, 0.32); // warm tone for cheeks/nose hints
@@ -101,26 +111,42 @@ export function Character({ appearance, pose, className }: CharacterProps): Reac
       </g>
 
       {/* Arms — separate groups with transform origins at the shoulders so the
-          Phase 2 state machine can rotate them (wave, celebrate, point). */}
+          Phase 2 state machine can rotate them (wave, celebrate, point).
+          Short-sleeve shirt: a shirt-colored sleeve stub from the shoulder,
+          then a slightly thinner bare forearm down to the hand. */}
       <g className="kb-arm-left" style={{ transformOrigin: '72px 146px' }}>
         <path
-          d="M 72 146 C 60 158 55 176 57 192"
+          d="M 60 166 C 57 174 56 184 57 192"
           fill="none"
-          stroke={shirtColor}
-          strokeWidth="15"
+          stroke={skinColor}
+          strokeWidth="11"
           strokeLinecap="round"
         />
         <circle cx="58" cy="197" r="7.5" fill={skinColor} />
-      </g>
-      <g className="kb-arm-right" style={{ transformOrigin: '148px 146px' }}>
         <path
-          d="M 148 146 C 160 158 165 176 163 192"
+          d="M 72 146 C 64 152 60 159 59 167"
           fill="none"
           stroke={shirtColor}
           strokeWidth="15"
           strokeLinecap="round"
         />
+      </g>
+      <g className="kb-arm-right" style={{ transformOrigin: '148px 146px' }}>
+        <path
+          d="M 160 166 C 163 174 164 184 163 192"
+          fill="none"
+          stroke={skinColor}
+          strokeWidth="11"
+          strokeLinecap="round"
+        />
         <circle cx="162" cy="197" r="7.5" fill={skinColor} />
+        <path
+          d="M 148 146 C 156 152 160 159 161 167"
+          fill="none"
+          stroke={shirtColor}
+          strokeWidth="15"
+          strokeLinecap="round"
+        />
       </g>
 
       {/* Legs and shoes — hips tuck up under the shirt hem so there's no seam */}
@@ -144,6 +170,19 @@ export function Character({ appearance, pose, className }: CharacterProps): Reac
         {/* Tie: knot + tail */}
         <path d="M 110 141 L 117 148 L 110 155 L 103 148 Z" fill={tieColor} />
         <path d="M 106 153 L 114 153 L 119 188 L 110 197 L 101 188 Z" fill={tieColor} />
+        {/* Pocket protector with pens — wearer's left chest (viewer's right).
+            Pens are drawn first so the pocket panel hides their lower halves. */}
+        {pocketProtector && (
+          <g className="kb-pocket-protector">
+            <rect x="127.5" y="144" width="3.4" height="12" rx="1.7" fill="#2D63AE" />
+            <rect x="129.2" y="145" width="0.9" height="6" fill="#C9D4E2" />
+            <rect x="133.5" y="142" width="3.4" height="14" rx="1.7" fill="#C03A3A" />
+            <circle cx="135.2" cy="143.6" r="1" fill="#8C2626" />
+            <rect x="139.5" y="145" width="3.4" height="11" rx="1.7" fill="#E8B91F" />
+            <rect x="124" y="152" width="23" height="21" rx="3" fill={shade(shirtColor, 0.05)} stroke={shade(shirtColor, 0.18)} strokeWidth="1.2" />
+            <rect x="124" y="152" width="23" height="6.5" rx="3" fill={shade(shirtColor, -0.4)} stroke={shade(shirtColor, 0.18)} strokeWidth="1.2" />
+          </g>
+        )}
       </g>
 
       {/* Neck sits behind the head, with a soft jaw shadow */}
