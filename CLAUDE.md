@@ -42,8 +42,10 @@ Ken is a CPA learning to code. Keep code readable; comment the non-obvious parts
 ## Character design
 
 Friendly cartoon man, Pixar-simple rounded shapes, big expressive eyes. Subtle
-resemblance to Ken: light blond very short hair, **no glasses** (toggle exists but
-defaults off), white shirt + black tie. Warm, not corporate.
+resemblance to Ken. Final Phase 1 look (Ken-approved 2026-06-10, baked into
+`defaultAppearance`): light blond **buzz cut**, **round glasses** (Ken changed his
+mind from the original no-glasses brief), light blue **short-sleeve** shirt, black
+tie, **pocket protector with pens**. Warm, not corporate.
 NOTE: the old `Ken Bot/` folder (kenbot.html, kenbot-character.svg) is a REJECTED
 earlier design — do not reuse it.
 
@@ -61,9 +63,9 @@ earlier design — do not reuse it.
 
 ## Phase plan (STOP after each phase for Ken's approval)
 
-- [ ] **Phase 1** — Repo scaffold, CLAUDE.md, hub memory files, static character in demo
+- [x] **Phase 1** — Repo scaffold, CLAUDE.md, hub memory files, static character in demo
       with idle breathing + blinks, control panel (colors/hair/glasses) for look iteration.
-      *(code written; awaiting Ken's visual review)*
+      *(approved by Ken 2026-06-10; his picks baked into defaultAppearance)*
 - [ ] **Phase 2** — Full animation state machine (idle/greet/listening/thinking/talking/
       celebrate/point-left/point-right) + demo buttons for every state. Imperative ref
       handle (`KenBotHandle`) for celebrate/point.

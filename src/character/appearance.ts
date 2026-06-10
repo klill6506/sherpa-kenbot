@@ -17,23 +17,27 @@ export interface CharacterAppearance {
   tieColor: string;
   pantsColor: string;
   shoeColor: string;
-  /** Ken doesn't wear glasses, but the toggle exists for experimenting. */
+  /** Round glasses. Ken settled on glasses-on during Phase 1 iteration. */
   glasses: boolean;
   /** Pens at the ready in a shirt-pocket protector. The CPA touch. */
   pocketProtector: boolean;
 }
 
-/** Ken's default look: light blond very short hair, no glasses, white shirt + black tie. */
+/**
+ * Ken's default look, picked by Ken in the Phase 1 playground session:
+ * light blond buzz cut, glasses, light blue short-sleeve shirt + black tie,
+ * pocket protector with pens.
+ */
 export const defaultAppearance: CharacterAppearance = {
-  skinColor: '#F3C9A4',
+  skinColor: '#E1BA98',
   hairColor: '#E9D8A0',
-  hairStyle: 'short',
-  eyeColor: '#5B7C99',
-  shirtColor: '#FBFBF8',
+  hairStyle: 'buzz',
+  eyeColor: '#2B6597',
+  shirtColor: '#A6C5E2',
   tieColor: '#23232B',
   pantsColor: '#3F4756',
   shoeColor: '#4D3A2C',
-  glasses: false,
+  glasses: true,
   pocketProtector: true,
 };
 
