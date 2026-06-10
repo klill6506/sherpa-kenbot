@@ -87,6 +87,11 @@ export interface KenBotProps {
    * server and NEVER in this package. Omit for text-only.
    */
   ttsEndpoint?: string;
+  /**
+   * Extra headers for the ttsEndpoint request — e.g. {'X-CSRFToken': token}
+   * for Django session auth, or an Authorization header.
+   */
+  ttsHeaders?: Record<string, string>;
 }
 
 /** Mute persists across sessions; voice arrives in Phase 4 but the choice sticks now. */
@@ -138,6 +143,7 @@ export function KenBot({
   onAsk,
   askEndpoint,
   ttsEndpoint,
+  ttsHeaders,
 }: KenBotProps): React.JSX.Element {
   // prefers-reduced-motion: keep blinks, drop bounce/gestures (the gesture
   // states still snap to their pose — see Character — but nothing waves or
@@ -164,7 +170,7 @@ export function KenBot({
   };
 
   // ----- Voice -----
-  const speech = useSpeech({ ttsEndpoint, muted });
+  const speech = useSpeech({ ttsEndpoint, ttsHeaders, muted });
   // One splitter per answer: streamed chunks go in, complete sentences come
   // out and are queued for TTS immediately — that's what makes him start
   // talking after the FIRST sentence instead of after the whole answer.

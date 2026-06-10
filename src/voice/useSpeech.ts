@@ -49,8 +49,17 @@ const MOUTH_GAIN = 7;
 /** After this many failed TTS requests in a row, give up quietly. */
 const MAX_CONSECUTIVE_FAILURES = 2;
 
-export function useSpeech(args: { ttsEndpoint?: string; muted: boolean }): SpeechController {
-  const { ttsEndpoint, muted } = args;
+export function useSpeech(args: {
+  ttsEndpoint?: string;
+  /** Extra request headers — e.g. a CSRF token for Django session auth. */
+  ttsHeaders?: Record<string, string>;
+  muted: boolean;
+}): SpeechController {
+  const { ttsEndpoint, ttsHeaders, muted } = args;
+  // Header values live in a ref so a new object literal each render doesn't
+  // re-create fetchClip (and everything downstream of it).
+  const headersRef = useRef(ttsHeaders);
+  headersRef.current = ttsHeaders;
 
   const [speaking, setSpeaking] = useState(false);
   const [mouthOpen, setMouthOpen] = useState(0);
@@ -97,7 +106,7 @@ export function useSpeech(args: { ttsEndpoint?: string; muted: boolean }): Speec
       try {
         const response = await fetch(ttsEndpoint, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...headersRef.current },
           body: JSON.stringify({ text: sentence }),
         });
         if (!response.ok) throw new Error(`tts ${response.status}`);

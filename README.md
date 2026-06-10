@@ -49,6 +49,7 @@ fine with Tailwind v4 — no config anywhere.
 | `onAsk` | — | Backend option A: `(message, history) => Promise<string> \| AsyncIterable<string>` |
 | `askEndpoint` | — | Backend option B: URL; receives `POST {message, history}`, may stream text |
 | `ttsEndpoint` | — | Voice proxy URL; receives `POST {text}` per sentence, returns audio. Omit = text-only |
+| `ttsHeaders` | — | Extra headers for TTS requests (e.g. `{'X-CSRFToken': ...}` for Django session auth) |
 | `name` | `"Ken"` | Chat header name |
 | `greeting` | a friendly hello | First message in the bubble |
 | `position` | `"bottom-right"` | `bottom-right` / `bottom-left` / `top-right` / `top-left` |
