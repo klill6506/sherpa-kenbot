@@ -30,7 +30,7 @@ describe('reduce', () => {
   });
 
   it('never lets a timeout end a persistent state', () => {
-    for (const state of ['idle', 'listening', 'thinking', 'talking'] as const) {
+    for (const state of ['idle', 'listening', 'thinking', 'talking', 'walking'] as const) {
       expect(reduce(state, { type: 'timeout', state })).toBe(state);
     }
   });

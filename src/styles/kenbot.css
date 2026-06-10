@@ -99,6 +99,59 @@
   100% { transform: rotate(0deg); }
 }
 
+/* Walking: legs swing alternately, arms counter-swing, body bobs. The actual
+   travel across the screen is a transform transition on .kb-root driven by
+   the useWander hook — these keyframes just make the strolling read. */
+.kb-state-walking .kb-leg-left {
+  animation: kb-walk-leg-a 0.55s ease-in-out infinite;
+}
+
+.kb-state-walking .kb-leg-right {
+  animation: kb-walk-leg-b 0.55s ease-in-out infinite;
+}
+
+.kb-state-walking .kb-arm-left {
+  animation: kb-walk-arm-a 0.55s ease-in-out infinite;
+}
+
+.kb-state-walking .kb-arm-right {
+  animation: kb-walk-arm-b 0.55s ease-in-out infinite;
+}
+
+.kb-state-walking .kb-figure {
+  animation: kb-walk-bob 0.275s ease-in-out infinite;
+}
+
+@keyframes kb-walk-leg-a {
+  0% { transform: rotate(-14deg); }
+  50% { transform: rotate(14deg); }
+  100% { transform: rotate(-14deg); }
+}
+
+@keyframes kb-walk-leg-b {
+  0% { transform: rotate(14deg); }
+  50% { transform: rotate(-14deg); }
+  100% { transform: rotate(14deg); }
+}
+
+@keyframes kb-walk-arm-a {
+  0% { transform: rotate(10deg); }
+  50% { transform: rotate(-10deg); }
+  100% { transform: rotate(10deg); }
+}
+
+@keyframes kb-walk-arm-b {
+  0% { transform: rotate(-10deg); }
+  50% { transform: rotate(10deg); }
+  100% { transform: rotate(-10deg); }
+}
+
+@keyframes kb-walk-bob {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-1.8px); }
+  100% { transform: translateY(0); }
+}
+
 /*
  * Reduced motion: drop the theatrics (wave/bounce/waggle). Joints still
  * transition to their static pose — a pointing arm carries meaning — and

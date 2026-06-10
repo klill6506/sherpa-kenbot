@@ -92,6 +92,7 @@ const STATE_ANGLES: Record<KenBotState, JointAngles> = {
   // chin (angles worked out so the hand lands just under the jaw).
   thinking: { ...NEUTRAL, shoulderRight: 80, elbowRight: 84, headTilt: -5 },
   talking: NEUTRAL, // hand waggle is a keyframe animation
+  walking: NEUTRAL, // leg swing + arm swing + bob are keyframe animations
   celebrate: { shoulderRight: -140, elbowRight: -18, shoulderLeft: 140, elbowLeft: 18, headTilt: -3 },
   // The slight elbow counter-rotation straightens the hand into the point
   // (the forearm artwork naturally curves downward).
@@ -191,13 +192,19 @@ export function Character({ appearance, pose, state = 'idle', className }: Chara
           <path d="M 162 80 Q 160 84 162 87" fill="none" stroke={skinShadow} strokeWidth="1.6" strokeLinecap="round" />
         </g>
 
-        {/* Legs and shoes — hips tuck up under the shirt hem so there's no seam */}
+        {/* Legs and shoes — hips tuck up under the shirt hem so there's no
+            seam. Each leg (+ its shoe) is a group pivoting at the hip so the
+            walking state can swing them (kb-walk-leg-* keyframes in kenbot.css). */}
         <g className="kb-legs">
           <rect x="72" y="194" width="76" height="22" rx="6" fill={pantsColor} />
-          <rect x="76" y="206" width="30" height="32" rx="11" fill={pantsColor} />
-          <rect x="114" y="206" width="30" height="32" rx="11" fill={pantsColor} />
-          <ellipse cx="90" cy="241" rx="14" ry="6.5" fill={shoeColor} />
-          <ellipse cx="130" cy="241" rx="14" ry="6.5" fill={shoeColor} />
+          <g className="kb-leg-left" style={jointStyle(0, 91, 208)}>
+            <rect x="76" y="206" width="30" height="32" rx="11" fill={pantsColor} />
+            <ellipse cx="90" cy="241" rx="14" ry="6.5" fill={shoeColor} />
+          </g>
+          <g className="kb-leg-right" style={jointStyle(0, 129, 208)}>
+            <rect x="114" y="206" width="30" height="32" rx="11" fill={pantsColor} />
+            <ellipse cx="130" cy="241" rx="14" ry="6.5" fill={shoeColor} />
+          </g>
         </g>
 
         {/* Torso: shirt, collar, tie, pocket protector */}

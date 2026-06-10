@@ -48,6 +48,13 @@ Ken is a CPA learning to code. Keep code readable; comment the non-obvious parts
   and `shade()` for deriving shadow/blush tones from base colors.
 - `src/hooks/useIdleLife.ts` — blink + glance timers (self-rescheduling random
   setTimeout chains).
+- `src/hooks/useWander.ts` — the wander brain (Ken requested "can he walk
+  about"): while idle, every 6–16s he strolls up to `wanderRange` px along the
+  screen edge at 50px/s (translateX transition on .kb-root), state `walking`
+  during travel, then back to idle; usually heads home next trip. Interruptions
+  glide him home fast. `wander` prop defaults ON; disabled under reduced motion.
+  `walking` is a persistent (not timed) state — the hook owns its duration.
+  The leg/arm/bob walk cycle is CSS keyframes keyed off kb-state-walking.
 - `src/KenBot.tsx` — the real component: fixed positioning, breathing, runs the
   state machine, exposes `KenBotHandle` (celebrate/pointLeft/pointRight/setState)
   via the React 19 ref prop, per-state face table (brows/mouth/gaze), greets on

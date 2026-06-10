@@ -44,6 +44,7 @@ export function App(): React.JSX.Element {
   const [appearance, setAppearance] = useState<CharacterAppearance>(defaultAppearance);
   const [pose, setPose] = useState<CharacterPose>(defaultPose);
   const [sizeScale, setSizeScale] = useState(1);
+  const [wander, setWander] = useState(true);
 
   // State machine demo: buttons drive BOTH the big preview (statically, so a
   // pose can be studied) and the corner KenBot via its imperative ref (the
@@ -202,6 +203,10 @@ export function App(): React.JSX.Element {
           </label>
 
           <h2>Corner KenBot</h2>
+          <label className="panel__field panel__field--row">
+            <input type="checkbox" checked={wander} onChange={(e) => setWander(e.target.checked)} />
+            <span>Wander (strolls off every 6–16s while idle)</span>
+          </label>
           <label className="panel__field">
             <span>Size scale: {sizeScale.toFixed(2)}</span>
             <input
@@ -229,7 +234,13 @@ export function App(): React.JSX.Element {
       </main>
 
       {/* The real thing, exactly as a host app would mount it */}
-      <KenBot ref={botRef} appearance={appearance} sizeScale={sizeScale} onStateChange={setCornerState} />
+      <KenBot
+        ref={botRef}
+        appearance={appearance}
+        sizeScale={sizeScale}
+        wander={wander}
+        onStateChange={setCornerState}
+      />
     </div>
   );
 }

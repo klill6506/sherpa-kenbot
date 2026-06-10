@@ -4,10 +4,13 @@
  * an event, what's the next state?". The timers live in useKenBotState.
  *
  * Two kinds of states:
- * - Persistent: idle, listening, thinking, talking. They hold until something
- *   (the chat flow, the host app, a demo button) requests a change.
+ * - Persistent: idle, listening, thinking, talking, walking. They hold until
+ *   something (the chat flow, the wander hook, a demo button) requests a change.
  * - Timed: greet, celebrate, point-left, point-right. They play a gesture and
  *   automatically fall back to idle when their timer fires.
+ *
+ * walking is persistent rather than timed because the wander hook owns its
+ * duration — it depends on how far he's strolling.
  */
 
 export const KENBOT_STATES = [
@@ -16,6 +19,7 @@ export const KENBOT_STATES = [
   'listening',
   'thinking',
   'talking',
+  'walking',
   'celebrate',
   'point-left',
   'point-right',

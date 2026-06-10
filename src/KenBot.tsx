@@ -5,6 +5,7 @@ import type { CharacterAppearance } from './character/appearance';
 import { defaultAppearance } from './character/appearance';
 import { useBlink, useGlance } from './hooks/useIdleLife';
 import { useFakeTalk, useKenBotState } from './hooks/useKenBotState';
+import { useWander } from './hooks/useWander';
 import type { KenBotState } from './state/stateMachine';
 import './styles/kenbot.css';
 
@@ -45,6 +46,11 @@ export interface KenBotProps {
   appearance?: Partial<CharacterAppearance>;
   /** Wave hello when he first appears. Default true (skipped under reduced motion). */
   autoGreet?: boolean;
+  /** Occasionally stroll along the screen edge while idle. Default true
+      (disabled under reduced motion). */
+  wander?: boolean;
+  /** Farthest he'll stroll from his corner, in px. Default 150. */
+  wanderRange?: number;
   /** Imperative controls (celebrate / point / setState). */
   ref?: React.Ref<KenBotHandle>;
   /** Fires whenever his animation state changes — handy for demos and debugging. */
@@ -73,6 +79,7 @@ const STATE_POSE: Record<
   listening: { browLift: 1, mouthOpen: 0, pupil: { x: 0, y: 0.15 } },
   thinking: { browLift: 0.25, mouthOpen: 0.05, pupil: { x: 0.35, y: -1 } }, // eyes drift up
   talking: { browLift: 0.2, mouthOpen: 0, pupil: { x: 0, y: 0 } }, // mouth overridden by audio/fake talk
+  walking: { browLift: 0, mouthOpen: 0, pupil: null }, // glance around while strolling
   celebrate: { browLift: 0.9, mouthOpen: 0.55, pupil: { x: 0, y: -0.2 } },
   'point-left': { browLift: 0.6, mouthOpen: 0.15, pupil: { x: -1, y: 0 } },
   'point-right': { browLift: 0.6, mouthOpen: 0.15, pupil: { x: 1, y: 0 } },
@@ -84,6 +91,8 @@ export function KenBot({
   zIndex = 9999,
   appearance,
   autoGreet = true,
+  wander = true,
+  wanderRange = 150,
   ref,
   onStateChange,
 }: KenBotProps): React.JSX.Element {
@@ -95,11 +104,21 @@ export function KenBot({
   const look: CharacterAppearance = { ...defaultAppearance, ...appearance };
   const { state, request } = useKenBotState();
 
-  // Idle life: always blink; only glance around when idle (a thinking or
-  // pointing gaze is part of the pose and shouldn't wander).
+  // Idle life: always blink; only glance around when idle or strolling (a
+  // thinking or pointing gaze is part of the pose and shouldn't wander).
   const eyesOpen = useBlink();
-  const glance = useGlance(state === 'idle' && !reducedMotion);
+  const glance = useGlance((state === 'idle' || state === 'walking') && !reducedMotion);
   const fakeTalkMouth = useFakeTalk(state === 'talking');
+
+  // Occasional strolls along the screen edge. From a right corner he walks
+  // left into the page, from a left corner he walks right.
+  const wanderStyle = useWander({
+    enabled: wander && !reducedMotion,
+    state,
+    request,
+    range: wanderRange,
+    direction: position.includes('right') ? -1 : 1,
+  });
 
   // Wave hello once on mount.
   useEffect(() => {
@@ -133,6 +152,7 @@ export function KenBot({
         {
           '--kb-z-index': zIndex,
           '--kb-height': `${BASE_HEIGHT_PX * sizeScale}px`,
+          ...wanderStyle,
         } as React.CSSProperties
       }
     >
