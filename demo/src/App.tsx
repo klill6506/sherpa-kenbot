@@ -10,6 +10,7 @@ import {
   type KenBotHandle,
   type KenBotState,
 } from 'sherpa-kenbot';
+import { mockAsk } from './mockBackend';
 
 /**
  * KenBot Playground — the development workbench.
@@ -240,6 +241,9 @@ export function App(): React.JSX.Element {
         sizeScale={sizeScale}
         wander={wander}
         onStateChange={setCornerState}
+        name="Ken"
+        greeting="Hi! I'm Ken, the demo bot. Ask me anything — I mostly echo."
+        onAsk={mockAsk}
       />
     </div>
   );

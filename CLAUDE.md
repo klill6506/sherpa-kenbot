@@ -55,10 +55,27 @@ Ken is a CPA learning to code. Keep code readable; comment the non-obvious parts
   glide him home fast. `wander` prop defaults ON; disabled under reduced motion.
   `walking` is a persistent (not timed) state — the hook owns its duration.
   The leg/arm/bob walk cycle is CSS keyframes keyed off kb-state-walking.
+- `src/chat/backend.ts` — pluggable backend layer. `AskFunction` =
+  `(message, history) → Promise<string> | AsyncIterable<string>`;
+  `createEndpointAsk(url)` POSTs `{message, history}` and streams the body;
+  `toStream` normalizes every allowed shape into chunk streams. Unit-tested
+  (including a stubbed-fetch streaming test).
+- `src/chat/useChat.ts` — conversation state: session-only history, send flow,
+  status (`idle → thinking → streaming → idle`). Streamed chunks grow the last
+  assistant message in place. Errors become a friendly assistant reply — raw
+  errors never reach the end user.
+- `src/chat/ChatPanel.tsx` — the speech bubble (~320px, anchored above him,
+  tail pointing at him; flips below for top corners). Header = name + mute +
+  close; typing dots while thinking; auto-scroll; themed via --kb-primary /
+  --kb-accent from the `colors` prop.
 - `src/KenBot.tsx` — the real component: fixed positioning, breathing, runs the
   state machine, exposes `KenBotHandle` (celebrate/pointLeft/pointRight/setState)
   via the React 19 ref prop, per-state face table (brows/mouth/gaze), greets on
-  mount, `onStateChange` callback for hosts.
+  mount, `onStateChange` callback for hosts. He's wrapped in a real <button>
+  (accessible chat trigger). Chat drives the machine ON TRANSITIONS ONLY
+  (open→listening, thinking→thinking, streaming→talking, closed→idle) — a
+  transition guard keeps it from stomping greet/celebrate. Mute persists in
+  localStorage under `kenbot-muted` (Phase 4 consumes it).
 - `demo/` — playground: big Character preview + state trigger buttons + control
   panel (colors, hair, glasses, pose sliders) + a true-size KenBot in the corner
   driven through its ref.
@@ -90,11 +107,13 @@ earlier design — do not reuse it.
 - [x] **Phase 1** — Repo scaffold, CLAUDE.md, hub memory files, static character in demo
       with idle breathing + blinks, control panel (colors/hair/glasses) for look iteration.
       *(approved by Ken 2026-06-10; his picks baked into defaultAppearance)*
-- [ ] **Phase 2** — Full animation state machine (idle/greet/listening/thinking/talking/
+- [x] **Phase 2** — Full animation state machine (idle/greet/listening/thinking/talking/
       celebrate/point-left/point-right) + demo buttons for every state. Imperative ref
-      handle (`KenBotHandle`) for celebrate/point. *(built + tested; awaiting Ken's review)*
+      handle (`KenBotHandle`) for celebrate/point. *(approved 2026-06-10; `walking` +
+      wander system added on Ken's request the same day)*
 - [ ] **Phase 3** — Speech-bubble chat panel (~320px, anchored above him), message history,
       streaming text, mute toggle persisted in localStorage, pluggable backend + demo mock.
+      *(built + tested; awaiting Ken's review)*
 - [ ] **Phase 4** — ElevenLabs TTS, Web Audio lip sync, sentence queue, DRF proxy example.
 - [ ] **Phase 5** — Distribution packaging (github: install), README drop-in guide
       (Vite/React/Tailwind host + Django wiring).

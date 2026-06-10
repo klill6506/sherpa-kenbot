@@ -1,8 +1,13 @@
-import { useEffect, useImperativeHandle } from 'react';
+import { useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import { Character } from './character/Character';
 import type { CharacterAppearance } from './character/appearance';
 import { defaultAppearance } from './character/appearance';
+import { ChatPanel } from './chat/ChatPanel';
+import type { AskFunction } from './chat/backend';
+import { createEndpointAsk } from './chat/backend';
+import type { ChatStatus } from './chat/useChat';
+import { useChat } from './chat/useChat';
 import { useBlink, useGlance } from './hooks/useIdleLife';
 import { useFakeTalk, useKenBotState } from './hooks/useKenBotState';
 import { useWander } from './hooks/useWander';
@@ -12,10 +17,10 @@ import './styles/kenbot.css';
 /**
  * <KenBot /> — the floating helper.
  *
- * Phase 2 scope: the full animation state machine. He greets on mount, and
- * hosts can drive him through the ref handle (celebrate, point) or watch his
- * state via onStateChange. The chat flow (Phase 3) will call request() with
- * listening/thinking/talking as the conversation moves.
+ * Clicking him toggles the speech-bubble chat. The conversation drives the
+ * state machine: bubble open → listening, waiting on the backend → thinking,
+ * reply streaming in → talking, bubble closed → idle. Hosts can also drive
+ * him through the ref handle (celebrate, point) or watch via onStateChange.
  */
 
 export type KenBotPosition = 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
@@ -55,12 +60,34 @@ export interface KenBotProps {
   ref?: React.Ref<KenBotHandle>;
   /** Fires whenever his animation state changes — handy for demos and debugging. */
   onStateChange?: (state: KenBotState) => void;
-  /** UI accent colors — used by the chat bubble from Phase 3 on. */
+  /** Chat UI colors: primary = header/user bubbles, accent = focus rings. */
   colors?: { primary?: string; accent?: string };
-  /** His name, shown in the chat header from Phase 3 on. Default "Ken". */
+  /** His name, shown in the chat header. Default "Ken". */
   name?: string;
-  /** First message in the chat bubble (Phase 3). */
+  /** First message waiting in the chat bubble. */
   greeting?: string;
+  /**
+   * The AI backend, option 1: a function. Gets (message, history) and returns
+   * either a Promise<string> or an AsyncIterable<string> of streamed chunks.
+   * Takes precedence over askEndpoint if both are given.
+   */
+  onAsk?: AskFunction;
+  /**
+   * The AI backend, option 2: a URL. The component POSTs { message, history }
+   * as JSON and streams the text response into the bubble.
+   */
+  askEndpoint?: string;
+}
+
+/** Mute persists across sessions; voice arrives in Phase 4 but the choice sticks now. */
+const MUTED_STORAGE_KEY = 'kenbot-muted';
+
+function readStoredMuted(): boolean {
+  try {
+    return localStorage.getItem(MUTED_STORAGE_KEY) === '1';
+  } catch {
+    return false; // storage unavailable (private mode, SSR) — default unmuted
+  }
 }
 
 const BASE_HEIGHT_PX = 160;
@@ -95,6 +122,11 @@ export function KenBot({
   wanderRange = 150,
   ref,
   onStateChange,
+  colors,
+  name = 'Ken',
+  greeting = "Hi! I'm Ken. What can I help you with?",
+  onAsk,
+  askEndpoint,
 }: KenBotProps): React.JSX.Element {
   // prefers-reduced-motion: keep blinks, drop bounce/gestures (the gesture
   // states still snap to their pose — see Character — but nothing waves or
@@ -103,6 +135,44 @@ export function KenBot({
 
   const look: CharacterAppearance = { ...defaultAppearance, ...appearance };
   const { state, request } = useKenBotState();
+
+  // ----- Chat -----
+  const [chatOpen, setChatOpen] = useState(false);
+  const [muted, setMuted] = useState(readStoredMuted);
+
+  const toggleMute = (): void => {
+    setMuted((current) => {
+      const next = !current;
+      try {
+        localStorage.setItem(MUTED_STORAGE_KEY, next ? '1' : '0');
+      } catch {
+        // storage unavailable — the toggle still works for this session
+      }
+      return next;
+    });
+  };
+
+  // onAsk wins if both backends are provided.
+  const ask = useMemo<AskFunction | null>(() => {
+    if (onAsk) return onAsk;
+    if (askEndpoint) return createEndpointAsk(askEndpoint);
+    return null;
+  }, [onAsk, askEndpoint]);
+
+  const { messages, status, send } = useChat({ ask, greeting });
+
+  // Map the conversation onto the state machine — but only on TRANSITIONS.
+  // Reacting to (open, status) values on every render would stomp gestures
+  // like the mount greet or a host-triggered celebrate.
+  const prevChat = useRef<{ open: boolean; status: ChatStatus }>({ open: false, status: 'idle' });
+  useEffect(() => {
+    const prev = prevChat.current;
+    if (prev.open === chatOpen && prev.status === status) return;
+    prevChat.current = { open: chatOpen, status };
+    if (status === 'thinking') request('thinking');
+    else if (status === 'streaming') request('talking');
+    else request(chatOpen ? 'listening' : 'idle');
+  }, [chatOpen, status, request]);
 
   // Idle life: always blink; only glance around when idle or strolling (a
   // thinking or pointing gaze is part of the pose and shouldn't wander).
@@ -152,27 +222,50 @@ export function KenBot({
         {
           '--kb-z-index': zIndex,
           '--kb-height': `${BASE_HEIGHT_PX * sizeScale}px`,
+          '--kb-primary': colors?.primary ?? '#2b6597',
+          '--kb-accent': colors?.accent ?? '#3d86c6',
           ...wanderStyle,
         } as React.CSSProperties
       }
     >
-      {/* Breathing: a slow, slight vertical bob on the whole figure. */}
-      <motion.div
-        animate={reducedMotion ? undefined : { y: [0, -2.5, 0] }}
-        transition={{ duration: 3.6, repeat: Infinity, ease: 'easeInOut' }}
-      >
-        <Character
-          className="kb-character"
-          appearance={look}
-          state={state}
-          pose={{
-            mouthOpen: state === 'talking' ? fakeTalkMouth : statePose.mouthOpen,
-            eyesOpen,
-            browLift: statePose.browLift,
-            pupilOffset: statePose.pupil ?? glance,
-          }}
+      {chatOpen && (
+        <ChatPanel
+          name={name}
+          messages={messages}
+          status={status}
+          muted={muted}
+          onToggleMute={toggleMute}
+          onSend={send}
+          onClose={() => setChatOpen(false)}
         />
-      </motion.div>
+      )}
+
+      {/* He IS the button: click to open the chat, click again to close. */}
+      <button
+        type="button"
+        className="kb-trigger"
+        onClick={() => setChatOpen((open) => !open)}
+        aria-label={chatOpen ? `Close ${name}'s chat` : `Ask ${name} for help`}
+        aria-expanded={chatOpen}
+      >
+        {/* Breathing: a slow, slight vertical bob on the whole figure. */}
+        <motion.div
+          animate={reducedMotion ? undefined : { y: [0, -2.5, 0] }}
+          transition={{ duration: 3.6, repeat: Infinity, ease: 'easeInOut' }}
+        >
+          <Character
+            className="kb-character"
+            appearance={look}
+            state={state}
+            pose={{
+              mouthOpen: state === 'talking' ? fakeTalkMouth : statePose.mouthOpen,
+              eyesOpen,
+              browLift: statePose.browLift,
+              pupilOffset: statePose.pupil ?? glance,
+            }}
+          />
+        </motion.div>
+      </button>
     </div>
   );
 }
