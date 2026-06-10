@@ -1,0 +1,38 @@
+/*
+ * KenBot package styles. Plain CSS, every class prefixed `kb-` so nothing
+ * collides with a host app. The package must work without Tailwind.
+ */
+
+.kb-root {
+  position: fixed;
+  z-index: var(--kb-z-index, 9999);
+  line-height: 0;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.kb-root--bottom-right {
+  right: 16px;
+  bottom: 10px;
+}
+
+.kb-root--bottom-left {
+  left: 16px;
+  bottom: 10px;
+}
+
+.kb-root--top-right {
+  right: 16px;
+  top: 10px;
+}
+
+.kb-root--top-left {
+  left: 16px;
+  top: 10px;
+}
+
+.kb-character {
+  display: block;
+  height: var(--kb-height, 160px);
+  width: auto;
+}
