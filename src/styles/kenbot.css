@@ -247,6 +247,47 @@
   cursor: default;
 }
 
+/* Push-to-talk button. Live = red and gently pulsing, so it's obvious the
+   microphone is open (and equally obvious when it isn't). */
+.kb-chat__mic {
+  border: 1px solid #d4d4cf;
+  border-radius: 9px;
+  background: #ffffff;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0 10px;
+  cursor: pointer;
+  flex: none;
+}
+
+.kb-chat__mic:hover:not(:disabled) {
+  border-color: var(--kb-accent, #3d86c6);
+}
+
+.kb-chat__mic:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.kb-chat__mic--live {
+  background: #d64545;
+  border-color: #d64545;
+  animation: kb-mic-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes kb-mic-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(214, 69, 69, 0.5); }
+  50% { box-shadow: 0 0 0 5px rgba(214, 69, 69, 0); }
+}
+
+.kb-chat__mic-note {
+  margin: 0;
+  padding: 0 12px 10px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: #8a5a5a;
+}
+
 /*
  * Keyframe gestures. Static per-state joint angles are inline styles set by
  * Character.tsx; these animations layer the showy moves on top. CSS
@@ -369,6 +410,11 @@
  */
 @media (prefers-reduced-motion: reduce) {
   .kb-svg * {
+    animation: none !important;
+  }
+
+  /* The mic's "live" red still reads without the pulse. */
+  .kb-chat__mic--live {
     animation: none !important;
   }
 }

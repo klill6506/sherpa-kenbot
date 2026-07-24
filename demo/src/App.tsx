@@ -46,6 +46,7 @@ export function App(): React.JSX.Element {
   const [pose, setPose] = useState<CharacterPose>(defaultPose);
   const [sizeScale, setSizeScale] = useState(1);
   const [wander, setWander] = useState(true);
+  const [voiceInput, setVoiceInput] = useState(true);
   // Voice: empty = text-only. `npm run mock-tts` → http://localhost:8787/tts
   // (robot babble) or `npm run real-tts` → http://localhost:8788/tts (real
   // ElevenLabs voice, needs .env). Persisted so reloads don't clear it.
@@ -216,6 +217,14 @@ export function App(): React.JSX.Element {
             <input type="checkbox" checked={wander} onChange={(e) => setWander(e.target.checked)} />
             <span>Wander (strolls off every 6–16s while idle)</span>
           </label>
+          <label className="panel__field panel__field--row">
+            <input
+              type="checkbox"
+              checked={voiceInput}
+              onChange={(e) => setVoiceInput(e.target.checked)}
+            />
+            <span>Voice input (🎤 in the bubble — Chrome/Edge only)</span>
+          </label>
           <label className="panel__field">
             <span>
               TTS endpoint (blank = text-only · mock-tts → :8787/tts · real-tts → :8788/tts)
@@ -264,6 +273,7 @@ export function App(): React.JSX.Element {
         greeting="Hi! I'm Ken, the demo bot. Ask me anything — I mostly echo."
         onAsk={mockAsk}
         ttsEndpoint={ttsUrl.trim() || undefined}
+        voiceInput={voiceInput}
       />
     </div>
   );

@@ -50,6 +50,8 @@ fine with Tailwind v4 — no config anywhere.
 | `askEndpoint` | — | Backend option B: URL; receives `POST {message, history}`, may stream text |
 | `ttsEndpoint` | — | Voice proxy URL; receives `POST {text}` per sentence, returns audio. Omit = text-only |
 | `ttsHeaders` | — | Extra headers for TTS requests (e.g. `{'X-CSRFToken': ...}` for Django session auth) |
+| `voiceInput` | `true` | Show the 🎤 button so users can *speak* their question (Chrome/Edge) |
+| `voiceInputLang` | `"en-US"` | Language the microphone listens for (BCP-47) |
 | `name` | `"Ken"` | Chat header name |
 | `greeting` | a friendly hello | First message in the bubble |
 | `position` | `"bottom-right"` | `bottom-right` / `bottom-left` / `top-right` / `top-left` |
@@ -116,6 +118,22 @@ Full steps in [`server-examples/README.md`](server-examples/README.md).
 Degradation is silent by design: no `ttsEndpoint`, muted (the bubble's 🔊
 toggle, persisted in localStorage), failed requests, or blocked audio — he
 just shows text and mimes along. Captions are always on.
+
+## Talking to him (microphone)
+
+The bubble has a 🎤 button: click it, ask your question out loud, and it sends
+itself as soon as you stop talking. Live text appears in the input while you
+speak, so you can see what he heard. Clicking the mic also cuts off whatever
+he was saying, so you can interrupt him.
+
+This uses the **browser's own** `SpeechRecognition` engine — no API key, no
+cost, and nothing to add to the host backend. Two things to know:
+
+- **Chrome and Edge only.** Firefox has no engine; the button simply doesn't
+  render there and typing works as always. Same if permission is denied.
+- **Chrome recognizes speech in Google's cloud**, so dictated audio leaves the
+  machine. Fine for "how do I add a client?"; pass `voiceInput={false}` on any
+  screen where users might speak confidential details.
 
 ## Accessibility
 

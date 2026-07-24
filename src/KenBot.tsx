@@ -1,4 +1,4 @@
-import { useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import { Character } from './character/Character';
 import type { CharacterAppearance } from './character/appearance';
@@ -92,6 +92,15 @@ export interface KenBotProps {
    * for Django session auth, or an Authorization header.
    */
   ttsHeaders?: Record<string, string>;
+  /**
+   * Talking TO him: show a mic button in the chat bubble that turns speech
+   * into a question. Uses the browser's own recognition engine (Chrome and
+   * Edge; the button simply doesn't appear elsewhere) — no keys, no server.
+   * Default true. Set false to force typing only.
+   */
+  voiceInput?: boolean;
+  /** Language the mic listens for, BCP-47. Default 'en-US'. */
+  voiceInputLang?: string;
 }
 
 /** Mute persists across sessions; voice arrives in Phase 4 but the choice sticks now. */
@@ -144,6 +153,8 @@ export function KenBot({
   askEndpoint,
   ttsEndpoint,
   ttsHeaders,
+  voiceInput = true,
+  voiceInputLang,
 }: KenBotProps): React.JSX.Element {
   // prefers-reduced-motion: keep blinks, drop bounce/gestures (the gesture
   // states still snap to their pose — see Character — but nothing waves or
@@ -207,6 +218,19 @@ export function KenBot({
   // Reacting to the values on every render would stomp gestures like the
   // mount greet or a host-triggered celebrate. He keeps "talking" while
   // audio is still playing, even after the text finished streaming.
+  // Opening the mic hushes him: he shouldn't talk over you, and his own
+  // voice coming out of the speakers is exactly what the mic would pick up.
+  // Dropping `speaking` to false also lets the effect below pose him as
+  // `listening` while you speak. The click is a user gesture, so it's also
+  // our chance to unlock audio for the answer that follows.
+  const speechRef = useRef(speech);
+  speechRef.current = speech;
+  const handleListeningChange = useCallback((listening: boolean): void => {
+    if (!listening) return;
+    speechRef.current.unlock();
+    speechRef.current.stop();
+  }, []);
+
   const speaking = speech.speaking;
   const prevChat = useRef<{ open: boolean; status: ChatStatus; speaking: boolean }>({
     open: false,
@@ -285,10 +309,14 @@ export function KenBot({
           status={status}
           muted={muted}
           onToggleMute={toggleMute}
+          voiceInput={voiceInput}
+          voiceInputLang={voiceInputLang}
+          onListeningChange={handleListeningChange}
           onSend={(text) => {
             // A submit is a real user gesture — the moment the browser lets
             // us start audio. unlock() here so the answer can be spoken.
             speech.unlock();
+            speech.stop(); // a new question cuts off the previous answer
             send(text);
           }}
           onClose={() => {

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useMic } from '../voice/useMic';
 import type { KenBotMessage } from './backend';
 import type { ChatStatus } from './useChat';
 
@@ -8,8 +9,9 @@ import type { ChatStatus } from './useChat';
  * lives in useChat, all positioning rules in kenbot.css.
  *
  * Text is always shown (captions by default); the mute toggle only controls
- * the voice (Phase 4). Styling uses --kb-primary / --kb-accent so host apps
- * can theme it via the colors prop.
+ * the voice. Talking TO him is the mic button in the input row (useMic) —
+ * click, speak, and it sends itself when you stop. Styling uses
+ * --kb-primary / --kb-accent so host apps can theme it via the colors prop.
  */
 
 export interface ChatPanelProps {
@@ -20,6 +22,12 @@ export interface ChatPanelProps {
   onToggleMute: () => void;
   onSend: (text: string) => void;
   onClose: () => void;
+  /** Show the mic button (when the browser supports recognition). */
+  voiceInput: boolean;
+  /** BCP-47 language for speech recognition, e.g. 'en-US'. */
+  voiceInputLang?: string;
+  /** Fires as the mic opens/closes — KenBot uses it to hush and to listen. */
+  onListeningChange?: (listening: boolean) => void;
 }
 
 export function ChatPanel({
@@ -30,12 +38,32 @@ export function ChatPanel({
   onToggleMute,
   onSend,
   onClose,
+  voiceInput,
+  voiceInputLang,
+  onListeningChange,
 }: ChatPanelProps): React.JSX.Element {
   const [draft, setDraft] = useState('');
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const busy = status !== 'idle';
+
+  // Speaking to him: the recognized sentence is sent the moment the engine
+  // decides you've stopped talking — no second click, no Enter key.
+  const mic = useMic({
+    enabled: voiceInput,
+    lang: voiceInputLang,
+    onFinal: (text) => {
+      onSend(text);
+      setDraft('');
+    },
+  });
+
+  // Let KenBot react to the mic (stop mid-sentence, hold the listening pose).
+  const listening = mic.listening;
+  useEffect(() => {
+    onListeningChange?.(listening);
+  }, [listening, onListeningChange]);
 
   // Keep the newest message in view as replies stream in.
   useEffect(() => {
@@ -106,18 +134,46 @@ export function ChatPanel({
           submit();
         }}
       >
+        {mic.supported && (
+          <button
+            type="button"
+            className={`kb-chat__mic${mic.listening ? ' kb-chat__mic--live' : ''}`}
+            onClick={() => (mic.listening ? mic.stop() : mic.start())}
+            disabled={busy}
+            aria-pressed={mic.listening}
+            aria-label={mic.listening ? 'Stop listening' : `Speak to ${name}`}
+            title={mic.listening ? 'Stop listening' : `Speak to ${name}`}
+          >
+            🎤
+          </button>
+        )}
         <input
           ref={inputRef}
           className="kb-chat__input"
-          value={draft}
+          // While the mic is live the input becomes a live caption of what
+          // he's hearing, so you can see the words land before they send.
+          value={mic.listening ? mic.transcript : draft}
           onChange={(e) => setDraft(e.target.value)}
-          placeholder={`Ask ${name}…`}
+          readOnly={mic.listening}
+          placeholder={mic.listening ? 'Listening… speak now' : `Ask ${name}…`}
           aria-label={`Ask ${name} a question`}
         />
-        <button type="submit" className="kb-chat__send" disabled={busy || !draft.trim()} aria-label="Send">
+        <button
+          type="submit"
+          className="kb-chat__send"
+          disabled={busy || mic.listening || !draft.trim()}
+          aria-label="Send"
+        >
           ➤
         </button>
       </form>
+
+      {/* A mic that heard nothing must say so — see the note in useMic. */}
+      {mic.notice && (
+        <p className="kb-chat__mic-note" role="status">
+          {mic.notice}
+        </p>
+      )}
 
       <div className="kb-chat__tail" aria-hidden="true" />
     </div>

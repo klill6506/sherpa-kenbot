@@ -80,6 +80,25 @@ Ken is a CPA learning to code. Keep code readable; comment the non-obvious parts
   2 consecutive failures / blocked AudioContext = silent text-only, never an
   error. AUTOPLAY: browsers need a user gesture before audio — `unlock()` is
   called from the trigger click and chat submit handlers.
+- `src/voice/useMic.ts` — the ear (talking TO him, added 2026-07-24 on Ken's
+  request). Push-to-talk using the BROWSER'S OWN `SpeechRecognition` engine —
+  no keys, no server endpoint, Chrome/Edge only. `continuous = false` means the
+  engine detects the pause at the end of your sentence itself, so the question
+  auto-sends; interim results stream into the chat input as a live caption.
+  Ken chose this over a server-side STT proxy specifically to avoid making every
+  host app build another endpoint; the cost is that Chrome recognizes in Google's
+  cloud, so `voiceInput={false}` is the documented opt-out for confidential
+  screens. Unsupported browser → no button at all. Otherwise failure is NEVER
+  silent (the opposite of useSpeech: a missing voice still leaves readable text,
+  but a mic that ate your question just looks broken) — every dead end sets
+  `notice` with a plain-English sentence: blocked, no mic, nothing heard,
+  network, insecure origin. **Permission is settled with getUserMedia BEFORE
+  recognition starts**: calling recognition.start() first makes Chrome raise its
+  permission prompt AND kill that session, so the user speaks into nothing and
+  has to click twice. That trap bit Ken on his very first test.
+  TS's DOM lib has no SpeechRecognition types, so the file declares the slice it
+  uses (`any` is banned). Opening the mic calls `speech.stop()` — he hushes so he
+  can't talk over you or hear himself.
 - `demo/mock-tts-server.mjs` — `npm run mock-tts` → http://localhost:8787/tts
   speaks robotic babble (WAV, syllable-pulsed loudness) so the whole voice
   pipeline + lip sync is testable offline with zero keys.
