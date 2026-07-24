@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Character,
   KENBOT_STATES,
@@ -9,6 +9,7 @@ import {
   type HairStyle,
   type KenBotHandle,
   type KenBotState,
+  type KenBotVoice,
 } from 'sherpa-kenbot';
 import { mockAsk } from './mockBackend';
 
@@ -55,6 +56,31 @@ export function App(): React.JSX.Element {
     setTtsUrl(value);
     localStorage.setItem('demo-tts-url', value);
   };
+
+  // Both demo servers expose GET /voices next to POST /tts, so the picker in
+  // the chat header lists whatever that server actually offers — the real one
+  // returns Ken's ElevenLabs voices, the mock returns robot/chipmunk/giant.
+  // A server without /voices just means no picker; nothing breaks.
+  const [voices, setVoices] = useState<KenBotVoice[]>([]);
+  useEffect(() => {
+    const url = ttsUrl.trim();
+    if (!url) {
+      setVoices([]);
+      return;
+    }
+    let cancelled = false;
+    fetch(url.replace(/\/tts\/?$/, '/voices'))
+      .then((res) => (res.ok ? res.json() : []))
+      .then((list: unknown) => {
+        if (!cancelled) setVoices(Array.isArray(list) ? (list as KenBotVoice[]) : []);
+      })
+      .catch(() => {
+        if (!cancelled) setVoices([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [ttsUrl]);
 
   // State machine demo: buttons drive BOTH the big preview (statically, so a
   // pose can be studied) and the corner KenBot via its imperative ref (the
@@ -236,6 +262,11 @@ export function App(): React.JSX.Element {
               onChange={(e) => updateTtsUrl(e.target.value)}
             />
           </label>
+          <p className="panel__hint">
+            {voices.length > 1
+              ? `${voices.length} voices offered — pick one in the chat header.`
+              : 'No voice list from this endpoint (GET /voices) — the picker stays hidden.'}
+          </p>
           <label className="panel__field">
             <span>Size scale: {sizeScale.toFixed(2)}</span>
             <input
@@ -273,6 +304,7 @@ export function App(): React.JSX.Element {
         greeting="Hi! I'm Ken, the demo bot. Ask me anything — I mostly echo."
         onAsk={mockAsk}
         ttsEndpoint={ttsUrl.trim() || undefined}
+        voices={voices}
         voiceInput={voiceInput}
       />
     </div>

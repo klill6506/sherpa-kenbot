@@ -15,6 +15,8 @@ import type { KenBotState } from './state/stateMachine';
 import { createSentenceSplitter } from './voice/sentences';
 import type { SentenceSplitter } from './voice/sentences';
 import { useSpeech } from './voice/useSpeech';
+import { pickInitialVoice } from './voice/voices';
+import type { KenBotVoice } from './voice/voices';
 import './styles/kenbot.css';
 
 /**
@@ -101,16 +103,35 @@ export interface KenBotProps {
   voiceInput?: boolean;
   /** Language the mic listens for, BCP-47. Default 'en-US'. */
   voiceInputLang?: string;
+  /**
+   * The voices a user may pick from, e.g.
+   * `[{ id: 'Z9CS…', label: 'Ken' }, { id: 'EXAV…', label: 'Narrator' }]`.
+   * Two or more puts a voice picker in the chat header and the choice is
+   * remembered. The id is sent to `ttsEndpoint` as `voice` — that server
+   * decides what it means, and should allow only ids it's happy to pay for.
+   */
+  voices?: KenBotVoice[];
+  /** Which voice to start with. Defaults to the first in `voices`. */
+  voice?: string;
 }
 
-/** Mute persists across sessions; voice arrives in Phase 4 but the choice sticks now. */
+/** Mute and the chosen voice both persist across sessions. */
 const MUTED_STORAGE_KEY = 'kenbot-muted';
+const VOICE_STORAGE_KEY = 'kenbot-voice';
 
 function readStoredMuted(): boolean {
   try {
     return localStorage.getItem(MUTED_STORAGE_KEY) === '1';
   } catch {
     return false; // storage unavailable (private mode, SSR) — default unmuted
+  }
+}
+
+function readStoredVoice(): string | null {
+  try {
+    return localStorage.getItem(VOICE_STORAGE_KEY);
+  } catch {
+    return null; // storage unavailable — fall back to the host's default
   }
 }
 
@@ -155,6 +176,8 @@ export function KenBot({
   ttsHeaders,
   voiceInput = true,
   voiceInputLang,
+  voices = [],
+  voice,
 }: KenBotProps): React.JSX.Element {
   // prefers-reduced-motion: keep blinks, drop bounce/gestures (the gesture
   // states still snap to their pose — see Character — but nothing waves or
@@ -180,8 +203,37 @@ export function KenBot({
     });
   };
 
+  // ----- Voice choice -----
+  const [voiceId, setVoiceId] = useState<string | undefined>(() =>
+    pickInitialVoice(voices, readStoredVoice(), voice),
+  );
+
+  // The menu can arrive late (a host fetching it from its own backend) or
+  // change outright, so re-pick whenever the offered ids change. Comparing
+  // the ids as a string means an inline `voices={[…]}` array literal — a new
+  // object every render — doesn't retrigger this.
+  const voicesKey = voices.map((v) => v.id).join('|');
+  const voicesRef = useRef(voices);
+  voicesRef.current = voices;
+  useEffect(() => {
+    setVoiceId((current) => {
+      const menu = voicesRef.current;
+      if (current && menu.some((v) => v.id === current)) return current; // still valid
+      return pickInitialVoice(menu, readStoredVoice(), voice);
+    });
+  }, [voicesKey, voice]);
+
+  const selectVoice = (id: string): void => {
+    setVoiceId(id);
+    try {
+      localStorage.setItem(VOICE_STORAGE_KEY, id);
+    } catch {
+      // storage unavailable — the choice still holds for this session
+    }
+  };
+
   // ----- Voice -----
-  const speech = useSpeech({ ttsEndpoint, ttsHeaders, muted });
+  const speech = useSpeech({ ttsEndpoint, ttsHeaders, voice: voiceId, muted });
   // One splitter per answer: streamed chunks go in, complete sentences come
   // out and are queued for TTS immediately — that's what makes him start
   // talking after the FIRST sentence instead of after the whole answer.
@@ -309,6 +361,9 @@ export function KenBot({
           status={status}
           muted={muted}
           onToggleMute={toggleMute}
+          voices={voices}
+          voiceId={voiceId}
+          onSelectVoice={selectVoice}
           voiceInput={voiceInput}
           voiceInputLang={voiceInputLang}
           onListeningChange={handleListeningChange}

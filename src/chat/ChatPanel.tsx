@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMic } from '../voice/useMic';
+import type { KenBotVoice } from '../voice/voices';
 import type { KenBotMessage } from './backend';
 import type { ChatStatus } from './useChat';
 
@@ -22,6 +23,11 @@ export interface ChatPanelProps {
   onToggleMute: () => void;
   onSend: (text: string) => void;
   onClose: () => void;
+  /** Voices on offer. Two or more shows the picker in the header. */
+  voices: KenBotVoice[];
+  /** Currently selected voice id. */
+  voiceId: string | undefined;
+  onSelectVoice: (id: string) => void;
   /** Show the mic button (when the browser supports recognition). */
   voiceInput: boolean;
   /** BCP-47 language for speech recognition, e.g. 'en-US'. */
@@ -38,6 +44,9 @@ export function ChatPanel({
   onToggleMute,
   onSend,
   onClose,
+  voices,
+  voiceId,
+  onSelectVoice,
   voiceInput,
   voiceInputLang,
   onListeningChange,
@@ -87,6 +96,22 @@ export function ChatPanel({
       <div className="kb-chat__header">
         <span className="kb-chat__title">{name}</span>
         <div className="kb-chat__header-buttons">
+          {/* One voice needs no menu — only offer a choice when there is one. */}
+          {voices.length > 1 && (
+            <select
+              className="kb-chat__voice"
+              value={voiceId ?? ''}
+              onChange={(e) => onSelectVoice(e.target.value)}
+              aria-label="Voice"
+              title="Voice"
+            >
+              {voices.map((v) => (
+                <option key={v.id} value={v.id}>
+                  {v.label}
+                </option>
+              ))}
+            </select>
+          )}
           <button
             type="button"
             className="kb-chat__icon-btn"

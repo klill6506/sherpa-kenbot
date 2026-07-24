@@ -151,6 +151,25 @@
   background: rgba(255, 255, 255, 0.18);
 }
 
+/* Voice picker. Sits in the coloured header, so it borrows white text — but
+   the dropdown list itself is drawn by the OS, hence the dark option color. */
+.kb-chat__voice {
+  max-width: 110px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font: inherit;
+  font-size: 11px;
+  padding: 2px 4px;
+  cursor: pointer;
+}
+
+.kb-chat__voice option {
+  color: #23232b;
+  background: #ffffff;
+}
+
 .kb-chat__messages {
   max-height: 300px;
   min-height: 120px;

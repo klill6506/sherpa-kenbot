@@ -53,12 +53,60 @@ if (!apiKey) {
   process.exit(1);
 }
 
+/**
+ * The voices this account can use, as [{ id, label }] — fetched once and
+ * cached. GET /voices serves it to the demo so the picker in the chat header
+ * lists exactly what's really available, with no ids hardcoded anywhere.
+ */
+let voiceCache = null;
+async function listVoices() {
+  if (voiceCache) return voiceCache;
+  const response = await fetch('https://api.elevenlabs.io/v1/voices', {
+    headers: { 'xi-api-key': apiKey },
+  });
+  if (!response.ok) throw new Error(`voices ${response.status}`);
+  const data = await response.json();
+  voiceCache = (data.voices ?? []).map((v) => ({ id: v.voice_id, label: v.name }));
+  // Ken's own clone first — it's the one he'll want most of the time.
+  voiceCache.sort((a, b) => (a.id === voiceId ? -1 : b.id === voiceId ? 1 : 0));
+  return voiceCache;
+}
+
+/**
+ * Only speak as a voice this account actually has.
+ *
+ * This matters more on a real host app than it looks: `voice` arrives from
+ * the browser, and an unchecked id lets anyone spend the account's credits on
+ * any voice they like. Checking against the real list is the allowlist.
+ */
+async function resolveVoice(requested) {
+  if (!requested || requested === voiceId) return voiceId;
+  try {
+    const allowed = await listVoices();
+    return allowed.some((v) => v.id === requested) ? requested : voiceId;
+  } catch {
+    return voiceId; // can't verify → fall back to the configured default
+  }
+}
+
 createServer(async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') {
     res.writeHead(204).end();
+    return;
+  }
+  if (req.method === 'GET' && req.url.startsWith('/voices')) {
+    try {
+      const voices = await listVoices();
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(voices));
+      console.log(`listed ${voices.length} voices`);
+    } catch (err) {
+      console.error('Could not list voices:', err.message);
+      res.writeHead(502).end();
+    }
     return;
   }
   if (req.method !== 'POST') {
@@ -70,8 +118,11 @@ createServer(async (req, res) => {
   req.on('data', (chunk) => (body += chunk));
   req.on('end', async () => {
     let text = '';
+    let requestedVoice = '';
     try {
-      text = String(JSON.parse(body).text ?? '').trim();
+      const payload = JSON.parse(body);
+      text = String(payload.text ?? '').trim();
+      requestedVoice = String(payload.voice ?? '');
     } catch {
       // fall through with empty text
     }
@@ -82,8 +133,9 @@ createServer(async (req, res) => {
     }
 
     try {
+      const speakingVoice = await resolveVoice(requestedVoice);
       const upstream = await fetch(
-        `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream`,
+        `https://api.elevenlabs.io/v1/text-to-speech/${speakingVoice}/stream`,
         {
           method: 'POST',
           headers: {
@@ -105,7 +157,7 @@ createServer(async (req, res) => {
         res.write(chunk);
       }
       res.end();
-      console.log(`spoke (${voiceId}): "${text.slice(0, 60)}${text.length > 60 ? '…' : ''}"`);
+      console.log(`spoke (${speakingVoice}): "${text.slice(0, 60)}${text.length > 60 ? '…' : ''}"`);
     } catch (err) {
       console.error('ElevenLabs request failed:', err.message);
       res.writeHead(502).end();

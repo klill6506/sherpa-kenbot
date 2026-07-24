@@ -80,6 +80,20 @@ Ken is a CPA learning to code. Keep code readable; comment the non-obvious parts
   2 consecutive failures / blocked AudioContext = silent text-only, never an
   error. AUTOPLAY: browsers need a user gesture before audio — `unlock()` is
   called from the trigger click and chat submit handlers.
+- `src/voice/voices.ts` — voice CHOICE (added 2026-07-24: "I may get tired of
+  my own voice"). `KenBotVoice = {id, label}`; the host supplies the menu via
+  the `voices` prop and the chosen id rides along with each sentence
+  (`POST {text, voice}`). The package stays ignorant of ElevenLabs — the
+  proxy resolves the id, and MUST allowlist it (`voice` is browser input;
+  unchecked it would let anyone spend the account's credits on any voice).
+  `pickInitialVoice` is a pure, unit-tested helper: saved pick if still
+  offered → `voice` prop → first in the menu → nothing at all. A stale saved
+  id is dropped rather than sent. Picker lives in the ChatPanel header (only
+  when 2+ voices), choice persists in localStorage `kenbot-voice`, and
+  switching mid-answer stops him (half an answer in each voice sounds broken).
+  Both demo servers serve `GET /voices`: the real one lists Ken's actual
+  ElevenLabs voices, the mock invents robot/chipmunk/giant by changing pitch
+  so the picker is testable offline.
 - `src/voice/useMic.ts` — the ear (talking TO him, added 2026-07-24 on Ken's
   request). Push-to-talk using the BROWSER'S OWN `SpeechRecognition` engine —
   no keys, no server endpoint, Chrome/Edge only. `continuous = false` means the

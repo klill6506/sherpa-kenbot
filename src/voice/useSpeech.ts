@@ -53,9 +53,11 @@ export function useSpeech(args: {
   ttsEndpoint?: string;
   /** Extra request headers — e.g. a CSRF token for Django session auth. */
   ttsHeaders?: Record<string, string>;
+  /** Which voice to ask for. Opaque here; the host's proxy resolves it. */
+  voice?: string;
   muted: boolean;
 }): SpeechController {
-  const { ttsEndpoint, ttsHeaders, muted } = args;
+  const { ttsEndpoint, ttsHeaders, voice, muted } = args;
   // Header values live in a ref so a new object literal each render doesn't
   // re-create fetchClip (and everything downstream of it).
   const headersRef = useRef(ttsHeaders);
@@ -107,7 +109,9 @@ export function useSpeech(args: {
         const response = await fetch(ttsEndpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', ...headersRef.current },
-          body: JSON.stringify({ text: sentence }),
+          // No voice chosen → the key is simply absent and the server uses
+          // its own default, exactly as before voices existed.
+          body: JSON.stringify({ text: sentence, voice }),
         });
         if (!response.ok) throw new Error(`tts ${response.status}`);
         const bytes = await response.arrayBuffer();
@@ -119,7 +123,7 @@ export function useSpeech(args: {
         return null; // graceful: this sentence is silent, captions carry it
       }
     },
-    [ttsEndpoint],
+    [ttsEndpoint, voice],
   );
 
   /** Reads loudness from the analyser every frame and moves the mouth. */
@@ -218,6 +222,19 @@ export function useSpeech(args: {
   useEffect(() => {
     if (muted) stop();
   }, [muted, stop]);
+
+  // Switching voices mid-answer does the same: the clips already queued are
+  // in the OLD voice, and finishing the answer half in one voice and half in
+  // another sounds like a fault. Cleaner to stop and let the next answer
+  // start fresh in the new voice.
+  const firstVoice = useRef(true);
+  useEffect(() => {
+    if (firstVoice.current) {
+      firstVoice.current = false; // mount isn't a change
+      return;
+    }
+    stop();
+  }, [voice, stop]);
 
   // Tidy up on unmount.
   useEffect(() => {

@@ -50,6 +50,8 @@ fine with Tailwind v4 — no config anywhere.
 | `askEndpoint` | — | Backend option B: URL; receives `POST {message, history}`, may stream text |
 | `ttsEndpoint` | — | Voice proxy URL; receives `POST {text}` per sentence, returns audio. Omit = text-only |
 | `ttsHeaders` | — | Extra headers for TTS requests (e.g. `{'X-CSRFToken': ...}` for Django session auth) |
+| `voices` | — | `[{id, label}]` — two or more puts a voice picker in the chat header |
+| `voice` | first in `voices` | Which voice to start with |
 | `voiceInput` | `true` | Show the 🎤 button so users can *speak* their question (Chrome/Edge) |
 | `voiceInputLang` | `"en-US"` | Language the microphone listens for (BCP-47) |
 | `name` | `"Ken"` | Chat header name |
@@ -118,6 +120,32 @@ Full steps in [`server-examples/README.md`](server-examples/README.md).
 Degradation is silent by design: no `ttsEndpoint`, muted (the bubble's 🔊
 toggle, persisted in localStorage), failed requests, or blocked audio — he
 just shows text and mimes along. Captions are always on.
+
+### Choosing a voice
+
+Hand him a menu and a picker appears in the chat header; the choice is
+remembered across sessions:
+
+```tsx
+<KenBot
+  ttsEndpoint="/api/kenbot/tts/"
+  voices={[
+    { id: 'Z9CSFTsEQ3J3DsnfCkiX', label: 'Ken' },
+    { id: 'EXAVITQu4vr4xnSDxMaL', label: 'Narrator' },
+  ]}
+/>
+```
+
+The chosen id rides along with each sentence (`POST {text, voice}`), and the
+host's proxy decides what it means. **That proxy must allowlist the ids it
+accepts** — `voice` comes from the browser, so an unchecked id lets anyone
+spend the account's credits on any voice in the library. The Django example
+does this with a `KENBOT_VOICES` dict, which doubles as the menu that
+`GET /api/kenbot/voices/` serves.
+
+Switching voices stops him mid-answer rather than finishing it half in one
+voice and half in another. Without a `voices` list, nothing changes: no
+picker, no `voice` in the request, and the server uses its own default.
 
 ## Talking to him (microphone)
 

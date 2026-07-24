@@ -10,6 +10,15 @@ The flow per sentence:
     this view ◄──mp3 bytes (streamed)──  ElevenLabs
     KenBot  ◄──audio/mpeg (streamed back as it arrives)──  this view
 
+Letting users pick a voice (optional):
+    settings.py   KENBOT_VOICES = {"<voice id>": "Ken", "<voice id>": "Narrator"}
+    KenBot props  voices={[...]} (fetch them from KenBotVoicesView)
+
+    The browser sends {"text": ..., "voice": "<id>"} and this view speaks as
+    that voice ONLY if the id is in KENBOT_VOICES. That allowlist is the whole
+    security story: `voice` is user input, and an unchecked id would let anyone
+    spend the account's credits on any voice in the ElevenLabs library.
+
 Wiring (see also ../README.md):
     settings.py   ELEVENLABS_API_KEY / ELEVENLABS_VOICE_ID from env
     urls.py       path("api/kenbot/tts/", KenBotTtsView.as_view())
@@ -37,6 +46,41 @@ ELEVENLABS_MODEL = "eleven_flash_v2_5"
 MAX_TEXT_LENGTH = 600
 
 
+def resolve_voice(requested):
+    """Map the browser's requested voice id onto one we're willing to speak as.
+
+    Anything not explicitly listed in KENBOT_VOICES falls back to the default
+    voice — an unknown id isn't worth an error page, but it must never reach
+    ElevenLabs unchecked.
+    """
+    default = getattr(settings, "ELEVENLABS_VOICE_ID", "")
+    allowed = getattr(settings, "KENBOT_VOICES", {}) or {}
+    requested = str(requested or "")
+    return requested if requested in allowed else default
+
+
+class KenBotVoicesThrottle(UserRateThrottle):
+    """Cheap read, but still not worth leaving unmetered."""
+
+    rate = "30/min"
+
+
+class KenBotVoicesView(APIView):
+    """GET the voices on offer, as [{"id": ..., "label": ...}].
+
+    Feed the response straight into KenBot's `voices` prop. Returns an empty
+    list when the host hasn't configured a menu, which simply means the chat
+    header shows no picker.
+    """
+
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [KenBotVoicesThrottle]
+
+    def get(self, request):
+        voices = getattr(settings, "KENBOT_VOICES", {}) or {}
+        return Response([{"id": voice_id, "label": label} for voice_id, label in voices.items()])
+
+
 class KenBotTtsThrottle(UserRateThrottle):
     """A chatty user asks a few questions/minute, each a handful of
     sentences — 60/min is generous headroom without letting one user
@@ -59,7 +103,8 @@ class KenBotTtsView(APIView):
             return Response({"detail": "text too long"}, status=status.HTTP_400_BAD_REQUEST)
 
         api_key = getattr(settings, "ELEVENLABS_API_KEY", "")
-        voice_id = getattr(settings, "ELEVENLABS_VOICE_ID", "")
+        # User-supplied voice, checked against the allowlist — see module docs.
+        voice_id = resolve_voice(request.data.get("voice"))
         if not api_key or not voice_id:
             # Service not configured — KenBot degrades to text-only on any
             # non-OK response, so this is safe to return.

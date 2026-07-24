@@ -1,6 +1,8 @@
 export { KenBot } from './KenBot';
 export type { KenBotProps, KenBotPosition, KenBotHandle } from './KenBot';
 
+export type { KenBotVoice } from './voice/voices';
+
 export { KENBOT_STATES, TIMED_STATE_DURATIONS } from './state/stateMachine';
 export type { KenBotState } from './state/stateMachine';
 

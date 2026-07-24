@@ -36,6 +36,26 @@ stack (Django 5.2 + DRF).
 
 5. `pip install requests` if the project doesn't already have it.
 
+### Letting users choose a voice (optional)
+
+Add the menu to settings, keyed by ElevenLabs voice id:
+
+```python
+# settings.py
+KENBOT_VOICES = {
+    "Z9CSFTsEQ3J3DsnfCkiX": "Ken",
+    "<another voice id>": "Narrator",
+}
+```
+
+`GET /api/kenbot/voices/` then returns `[{"id": ..., "label": ...}]` — feed it
+straight into KenBot's `voices` prop and a picker appears in the chat header.
+
+**This dict is an allowlist, not just a menu.** The browser sends the chosen
+`voice` with every sentence, so it is user input: without the check, anyone
+could make the proxy speak as any voice on the account, on the account's bill.
+Ids that aren't listed silently fall back to `ELEVENLABS_VOICE_ID`.
+
 Notes:
 
 - The view requires an authenticated user and throttles to 60 requests/min
@@ -53,4 +73,6 @@ Notes:
 `npm run mock-tts` (repo root) starts a tiny Node server on
 http://localhost:8787/tts that speaks robotic babble — same request/response
 shape, no key needed. Point the demo's "TTS endpoint" field at it to watch
-the lip sync work offline.
+the lip sync work offline. It also serves `GET /voices` with three obviously
+different fake voices (robot / chipmunk / giant), so the voice picker can be
+exercised without spending a single ElevenLabs credit.
