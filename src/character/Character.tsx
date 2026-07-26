@@ -154,9 +154,14 @@ export function Character({ appearance, pose, state = 'idle', className }: Chara
     skirtColor,
     umbrella = false,
     umbrellaColor = '#26303B',
+    jacket = false,
+    jacketColor = '#2E4638',
     lashes = false,
     faceScale = 1,
   } = appearance;
+
+  // Jacket sleeves cover the upper arms; without a jacket the shirt does.
+  const sleeveColor = jacket ? jacketColor : shirtColor;
 
   const skinShadow = shade(skinColor, 0.18);
   const blushColor = shade(skinColor, 0.16); // warm tone for cheeks/nose hints
@@ -228,6 +233,25 @@ export function Character({ appearance, pose, state = 'idle', className }: Chara
             d="M 64 200 L 64 165 C 61 140 80 129 110 129 C 140 129 159 140 156 165 L 156 200 Z"
             fill={shirtColor}
           />
+          {/* Tailored jacket over the shirt: body, neckline V showing the
+              shirt, lapels, seam and gold buttons. Collar + neckwear paint
+              on top so a bow sits over the lapels. */}
+          {jacket && (
+            <g className="kb-jacket">
+              <path
+                d="M 64 200 L 64 165 C 61 140 80 129 110 129 C 140 129 159 140 156 165 L 156 200 Z"
+                fill={jacketColor}
+              />
+              <path d="M 96 130 L 110 160 L 124 130 Z" fill={shirtColor} />
+              <path d="M 96 130 L 110 160 L 99 150 Z" fill={shade(jacketColor, 0.22)} />
+              <path d="M 124 130 L 110 160 L 121 150 Z" fill={shade(jacketColor, 0.22)} />
+              <path d="M 110 160 L 110 199" stroke={shade(jacketColor, 0.25)} strokeWidth="1.6" strokeLinecap="round" />
+              <circle cx="104" cy="172" r="2.6" fill="#C9A24B" />
+              <circle cx="116" cy="172" r="2.6" fill="#C9A24B" />
+              <circle cx="104" cy="186" r="2.6" fill="#C9A24B" />
+              <circle cx="116" cy="186" r="2.6" fill="#C9A24B" />
+            </g>
+          )}
           {/* Collar wings */}
           <path d="M 100 132 L 110 144 L 93 141 Z" fill={shirtColor} stroke={shade(shirtColor, 0.12)} strokeWidth="1" />
           <path d="M 120 132 L 110 144 L 127 141 Z" fill={shirtColor} stroke={shade(shirtColor, 0.12)} strokeWidth="1" />
@@ -303,7 +327,7 @@ export function Character({ appearance, pose, state = 'idle', className }: Chara
           <path
             d="M 70 143 C 62 150 58 158 57 166"
             fill="none"
-            stroke={shirtColor}
+            stroke={sleeveColor}
             strokeWidth="15"
             strokeLinecap="round"
           />
@@ -322,7 +346,7 @@ export function Character({ appearance, pose, state = 'idle', className }: Chara
           <path
             d="M 150 143 C 158 150 162 158 163 166"
             fill="none"
-            stroke={shirtColor}
+            stroke={sleeveColor}
             strokeWidth="15"
             strokeLinecap="round"
           />

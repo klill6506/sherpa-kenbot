@@ -34,6 +34,12 @@ export interface CharacterAppearance {
   /** A furled umbrella resting in the left hand. */
   umbrella?: boolean;
   umbrellaColor?: string;
+  /**
+   * Tailored jacket over the shirt: lapels, button front, and sleeves in
+   * jacketColor. The shirt shows at the neckline V.
+   */
+  jacket?: boolean;
+  jacketColor?: string;
   /** Eyelashes at the outer eye corners, plus softer (thinner) brows. */
   lashes?: boolean;
   /**
@@ -69,10 +75,11 @@ export const defaultAppearance: CharacterAppearance = {
 /**
  * A "Mary Poppins-ish" look (Ken 2026-07-25 — an original character in
  * that spirit, not the film design; Ken's iteration notes: younger, no
- * skirt, more attractive; then thinner + darker face): dark ponytail
- * under a navy flowered hat, lashes, slimmed face, warm brown skin,
- * cream blouse with a rose collar bow, slim navy trousers, and a furled
- * umbrella in hand.
+ * skirt, more attractive; thinner + darker face; then a wardrobe change
+ * to the app's Heritage Green): dark ponytail under a deep-green
+ * flowered hat, lashes, slimmed face, warm brown skin, deep-green
+ * tailored jacket with gold buttons over a cream blouse, gold collar
+ * bow, charcoal trousers, and a furled umbrella in hand.
  */
 export const nannyAppearance: CharacterAppearance = {
   skinColor: '#A66A42',
@@ -80,17 +87,19 @@ export const nannyAppearance: CharacterAppearance = {
   hairStyle: 'ponytail',
   eyeColor: '#4A3320',
   shirtColor: '#F5F1E6',
-  tieColor: '#A63A50',
-  pantsColor: '#31405C',
+  tieColor: '#C9A24B',
+  pantsColor: '#4B5266',
   shoeColor: '#3A2B33',
   glasses: false,
   pocketProtector: false,
   neckwear: 'bow',
   hat: true,
-  hatColor: '#26303B',
+  hatColor: '#35594A',
   skirt: false,
   umbrella: true,
-  umbrellaColor: '#26303B',
+  umbrellaColor: '#35594A',
+  jacket: true,
+  jacketColor: '#41705A',
   lashes: true,
   faceScale: 0.9,
 };
