@@ -82,7 +82,7 @@ export const defaultAppearance: CharacterAppearance = {
  * bow, charcoal trousers, and a furled umbrella in hand.
  */
 export const nannyAppearance: CharacterAppearance = {
-  skinColor: '#A66A42',
+  skinColor: '#B87E52',
   hairColor: '#2E211A',
   hairStyle: 'ponytail',
   eyeColor: '#4A3320',
