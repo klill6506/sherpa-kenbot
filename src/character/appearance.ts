@@ -48,6 +48,11 @@ export interface CharacterAppearance {
    * ears slide inward to stay attached.
    */
   faceScale?: number;
+  /**
+   * Resting-smile size, 0 (the classic thin smile) to 1 (a wide, upturned
+   * grin). Lip sync still opens the mouth on top of it.
+   */
+  smile?: number;
 }
 
 /**
@@ -88,20 +93,21 @@ export const nannyAppearance: CharacterAppearance = {
   eyeColor: '#4A3320',
   shirtColor: '#F5F1E6',
   tieColor: '#C9A24B',
-  pantsColor: '#4B5266',
+  pantsColor: '#2B2F38',
   shoeColor: '#3A2B33',
   glasses: false,
   pocketProtector: false,
   neckwear: 'bow',
   hat: true,
-  hatColor: '#35594A',
+  hatColor: '#233B2F',
   skirt: false,
   umbrella: true,
-  umbrellaColor: '#35594A',
+  umbrellaColor: '#233B2F',
   jacket: true,
-  jacketColor: '#41705A',
+  jacketColor: '#2E4638',
   lashes: true,
   faceScale: 0.9,
+  smile: 0.7,
 };
 
 /**

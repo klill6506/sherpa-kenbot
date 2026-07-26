@@ -115,13 +115,16 @@ function figureStyle(state: KenBotState): React.CSSProperties {
  * Closed (0) is a thin smiling lens; open (1) drops the lower lip into a
  * tall rounded shape. One path morphs smoothly between them, which is what
  * makes amplitude-driven lip sync look natural later.
+ *
+ * `smile` (0..1, from appearance) widens the resting mouth and lifts the
+ * corners so the closed pose reads as a real grin; lip sync layers on top.
  */
-function mouthPath(open: number): string {
+function mouthPath(open: number, smile = 0): string {
   const cx = 110;
-  const cornerY = 104;
-  const halfWidth = 14 + open * 3;
-  const upperLip = cornerY + 3 + open * 2;
-  const lowerLip = cornerY + 5 + open * 26;
+  const cornerY = 104 - smile * 2.5;
+  const halfWidth = 14 + open * 3 + smile * 4;
+  const upperLip = cornerY + 3 + open * 2 + smile * 3.5;
+  const lowerLip = cornerY + 5 + open * 26 + smile * 6;
   return [
     `M ${cx - halfWidth} ${cornerY}`,
     `Q ${cx} ${upperLip} ${cx + halfWidth} ${cornerY}`,
@@ -158,6 +161,7 @@ export function Character({ appearance, pose, state = 'idle', className }: Chara
     jacketColor = '#2E4638',
     lashes = false,
     faceScale = 1,
+    smile = 0,
   } = appearance;
 
   // Jacket sleeves cover the upper arms; without a jacket the shirt does.
@@ -190,7 +194,7 @@ export function Character({ appearance, pose, state = 'idle', className }: Chara
     >
       <defs>
         <clipPath id={mouthClipId}>
-          <path d={mouthPath(pose.mouthOpen)} />
+          <path d={mouthPath(pose.mouthOpen, smile)} />
         </clipPath>
       </defs>
 
@@ -458,10 +462,13 @@ export function Character({ appearance, pose, state = 'idle', className }: Chara
           {/* Mouth: a single morphing path. Teeth and tongue are clipped to the
               mouth outline so they never spill outside the lips at any openness. */}
           <g className="kb-mouth">
-            <path d={mouthPath(pose.mouthOpen)} fill="#7C3A43" />
+            <path d={mouthPath(pose.mouthOpen, smile)} fill="#7C3A43" />
             <g clipPath={`url(#${mouthClipId})`}>
-              {/* Upper teeth appear as the mouth opens */}
-              {pose.mouthOpen > 0.15 && <rect x="96" y="103" width="28" height="6.5" rx="2" fill="#FDFDFB" />}
+              {/* Upper teeth appear as the mouth opens — or peek through a
+                  big resting smile */}
+              {(pose.mouthOpen > 0.15 || smile > 0.55) && (
+                <rect x="96" y={103 - smile * 2.5} width="28" height="6.5" rx="2" fill="#FDFDFB" />
+              )}
               {/* Tongue peeks in when wide open */}
               {pose.mouthOpen > 0.45 && <ellipse cx="110" cy="118" rx="10" ry="7" fill="#B05A60" />}
             </g>
