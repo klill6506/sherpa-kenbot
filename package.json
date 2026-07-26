@@ -1,6 +1,6 @@
 {
   "name": "sherpa-kenbot",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Reusable animated AI help character for React apps — a small code-drawn helper who answers questions and speaks with lip sync.",
   "type": "module",
   "license": "MIT",

@@ -147,6 +147,13 @@ export function Character({ appearance, pose, state = 'idle', className }: Chara
     shoeColor,
     glasses,
     pocketProtector,
+    neckwear = 'tie',
+    hat = false,
+    hatColor = '#26303B',
+    skirt = false,
+    skirtColor,
+    umbrella = false,
+    umbrellaColor = '#26303B',
   } = appearance;
 
   const skinShadow = shade(skinColor, 0.18);
@@ -216,9 +223,35 @@ export function Character({ appearance, pose, state = 'idle', className }: Chara
           {/* Collar wings */}
           <path d="M 100 132 L 110 144 L 93 141 Z" fill={shirtColor} stroke={shade(shirtColor, 0.12)} strokeWidth="1" />
           <path d="M 120 132 L 110 144 L 127 141 Z" fill={shirtColor} stroke={shade(shirtColor, 0.12)} strokeWidth="1" />
-          {/* Tie: knot + tail */}
-          <path d="M 110 141 L 117 148 L 110 155 L 103 148 Z" fill={tieColor} />
-          <path d="M 106 153 L 114 153 L 119 188 L 110 197 L 101 188 Z" fill={tieColor} />
+          {/* Neckwear: Ken's tie, or a soft collar bow (both use tieColor) */}
+          {neckwear === 'tie' && (
+            <>
+              <path d="M 110 141 L 117 148 L 110 155 L 103 148 Z" fill={tieColor} />
+              <path d="M 106 153 L 114 153 L 119 188 L 110 197 L 101 188 Z" fill={tieColor} />
+            </>
+          )}
+          {neckwear === 'bow' && (
+            <g className="kb-bow">
+              <path d="M 108 147 C 96 140 90 144 92 151 C 94 157 102 156 108 151 Z" fill={tieColor} />
+              <path d="M 112 147 C 124 140 130 144 128 151 C 126 157 118 156 112 151 Z" fill={tieColor} />
+              <path d="M 104 155 L 108 165" stroke={tieColor} strokeWidth="3" strokeLinecap="round" />
+              <path d="M 116 155 L 112 165" stroke={tieColor} strokeWidth="3" strokeLinecap="round" />
+              <circle cx="110" cy="149" r="4.5" fill={shade(tieColor, 0.25)} />
+            </g>
+          )}
+          {/* A-line skirt: sits over the hips; painted here (after the shirt,
+              before the arms) so swinging legs stay beneath it when walking */}
+          {skirt && (
+            <g className="kb-skirt">
+              <path
+                d="M 68 194 C 66 210 62 221 57 229 L 163 229 C 158 221 154 210 152 194 Z"
+                fill={skirtColor ?? pantsColor}
+              />
+              <path d="M 92 198 L 84 226" stroke={shade(skirtColor ?? pantsColor, 0.18)} strokeWidth="1.6" strokeLinecap="round" />
+              <path d="M 110 199 L 110 227" stroke={shade(skirtColor ?? pantsColor, 0.18)} strokeWidth="1.6" strokeLinecap="round" />
+              <path d="M 128 198 L 136 226" stroke={shade(skirtColor ?? pantsColor, 0.18)} strokeWidth="1.6" strokeLinecap="round" />
+            </g>
+          )}
           {/* Pocket protector with pens — wearer's left chest (viewer's right).
               Pens are drawn first so the pocket panel hides their lower halves. */}
           {pocketProtector && (
@@ -247,6 +280,17 @@ export function Character({ appearance, pose, state = 'idle', className }: Chara
               strokeLinecap="round"
             />
             <circle cx="56" cy="197" r="7.5" fill={skinColor} />
+            {/* Furled umbrella resting in this hand — inside the forearm
+                group so it swings with the arm. Hook handle up, tip down. */}
+            {umbrella && (
+              <g className="kb-umbrella">
+                <path d="M 56 170 C 56 162 46 162 46 170" fill="none" stroke="#B08D3E" strokeWidth="3" strokeLinecap="round" />
+                <line x1="56" y1="168" x2="56" y2="244" stroke={shade(umbrellaColor, 0.35)} strokeWidth="2.5" strokeLinecap="round" />
+                <path d="M 56 176 C 49 196 50 216 56 231 C 62 216 63 196 56 176 Z" fill={umbrellaColor} />
+                <path d="M 52 190 Q 56 193 60 190" fill="none" stroke={shade(umbrellaColor, -0.3)} strokeWidth="1.4" />
+                <path d="M 51 208 Q 56 211 61 208" fill="none" stroke={shade(umbrellaColor, -0.3)} strokeWidth="1.4" />
+              </g>
+            )}
           </g>
           <path
             d="M 70 143 C 62 150 58 158 57 166"
@@ -389,7 +433,43 @@ export function Character({ appearance, pose, state = 'idle', className }: Chara
                 <path d="M 95 47 C 99 43 105 41 112 41" fill="none" stroke={hairShadow} strokeWidth="2" strokeLinecap="round" />
               </>
             )}
+            {hairStyle === 'bun' && (
+              <>
+                {/* Smooth center-parted cap, swept down past the temples */}
+                <path
+                  d="M 61 76 C 59 36 84 19 110 19 C 136 19 161 36 159 76 C 158 80 154 80 153 75 C 153 52 136 42 110 42 C 84 42 67 52 67 75 C 66 80 62 80 61 76 Z"
+                  fill={hairColor}
+                />
+                <path d="M 110 21 L 110 40" fill="none" stroke={hairShadow} strokeWidth="2" strokeLinecap="round" />
+                {/* Side sweeps in front of the ears */}
+                <path d="M 62 68 C 59 86 62 96 70 102 C 65 92 65 78 68 66 Z" fill={hairColor} />
+                <path d="M 158 68 C 161 86 158 96 150 102 C 155 92 155 78 152 66 Z" fill={hairColor} />
+                {/* The bun above the crown (fully covered when the hat is on) */}
+                <circle cx="110" cy="17" r="11" fill={hairColor} />
+                <path d="M 101 15 Q 110 9 119 15" fill="none" stroke={hairShadow} strokeWidth="1.8" strokeLinecap="round" />
+              </>
+            )}
           </g>
+
+          {/* Hat: round crown + brim with a band and a small flower. Painted
+              after the hair so it sits on top; part of the head group so it
+              tilts with her. */}
+          {hat && (
+            <g className="kb-hat">
+              <path d="M 76 31 C 76 8 92 1 110 1 C 128 1 144 8 144 31 Z" fill={hatColor} />
+              <ellipse cx="110" cy="31" rx="49" ry="7.5" fill={shade(hatColor, 0.18)} />
+              <rect x="76" y="23" width="68" height="8" rx="4" fill={shade(hatColor, -0.28)} />
+              {/* Flower: petals around a gold center, with a leaf */}
+              <g className="kb-hat-flower">
+                <path d="M 128 26 Q 138 22 142 27" fill="none" stroke="#3E6B45" strokeWidth="3" strokeLinecap="round" />
+                <circle cx="132" cy="21" r="3.4" fill="#C05A6A" />
+                <circle cx="139" cy="21" r="3.4" fill="#C05A6A" />
+                <circle cx="132" cy="27.5" r="3.4" fill="#C05A6A" />
+                <circle cx="139" cy="27.5" r="3.4" fill="#C05A6A" />
+                <circle cx="135.5" cy="24" r="3" fill="#E0B23E" />
+              </g>
+            </g>
+          )}
 
           {/* Glasses: round frames, part of the head so they tilt with it */}
           {glasses && (

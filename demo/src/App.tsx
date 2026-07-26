@@ -4,6 +4,7 @@ import {
   KENBOT_STATES,
   KenBot,
   defaultAppearance,
+  nannyAppearance,
   type CharacterAppearance,
   type CharacterPose,
   type HairStyle,
@@ -23,7 +24,7 @@ import { mockAsk } from './mockBackend';
  * Both share the same appearance state, so a color tweak updates both.
  */
 
-const HAIR_STYLES: HairStyle[] = ['short', 'buzz', 'side-part'];
+const HAIR_STYLES: HairStyle[] = ['short', 'buzz', 'side-part', 'bun'];
 
 const COLOR_FIELDS: { key: keyof CharacterAppearance; label: string }[] = [
   { key: 'skinColor', label: 'Skin' },
@@ -132,6 +133,15 @@ export function App(): React.JSX.Element {
           </p>
 
           <h2>Appearance</h2>
+          {/* Presets: Ken's default and the British-nanny look (v1.2.0) */}
+          <div className="panel__states">
+            <button type="button" className="panel__state-btn" onClick={() => setAppearance(defaultAppearance)}>
+              preset: Ken
+            </button>
+            <button type="button" className="panel__state-btn" onClick={() => setAppearance(nannyAppearance)}>
+              preset: Nanny
+            </button>
+          </div>
           <div className="panel__grid">
             {COLOR_FIELDS.map(({ key, label }) => (
               <label key={key} className="panel__field">

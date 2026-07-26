@@ -15,5 +15,5 @@ export type { AskFunction, AskResult, KenBotMessage } from './chat/backend';
 // host app) can render him at any size with full pose control.
 export { Character } from './character/Character';
 export type { CharacterProps, CharacterPose } from './character/Character';
-export { defaultAppearance, shade } from './character/appearance';
+export { defaultAppearance, nannyAppearance, shade } from './character/appearance';
 export type { CharacterAppearance, HairStyle } from './character/appearance';
