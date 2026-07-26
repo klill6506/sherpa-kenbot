@@ -155,6 +155,7 @@ export function Character({ appearance, pose, state = 'idle', className }: Chara
     umbrella = false,
     umbrellaColor = '#26303B',
     lashes = false,
+    faceScale = 1,
   } = appearance;
 
   const skinShadow = shade(skinColor, 0.18);
@@ -192,12 +193,18 @@ export function Character({ appearance, pose, state = 'idle', className }: Chara
       <ellipse cx="110" cy="248" rx="46" ry="6" fill="#000000" opacity="0.08" />
 
       <g className="kb-figure" style={figureStyle(state)}>
-        {/* Ears — drawn first so the skull overlaps their inner halves */}
+        {/* Ears — drawn first so the skull overlaps their inner halves.
+            When faceScale slims the head, each ear slides inward by the
+            same amount so it stays attached to the narrower skull. */}
         <g className="kb-ears">
-          <circle cx="61" cy="82" r="9" fill={skinColor} />
-          <circle cx="159" cy="82" r="9" fill={skinColor} />
-          <path d="M 58 80 Q 60 84 58 87" fill="none" stroke={skinShadow} strokeWidth="1.6" strokeLinecap="round" />
-          <path d="M 162 80 Q 160 84 162 87" fill="none" stroke={skinShadow} strokeWidth="1.6" strokeLinecap="round" />
+          <g transform={`translate(${49 * (1 - faceScale)} 0)`}>
+            <circle cx="61" cy="82" r="9" fill={skinColor} />
+            <path d="M 58 80 Q 60 84 58 87" fill="none" stroke={skinShadow} strokeWidth="1.6" strokeLinecap="round" />
+          </g>
+          <g transform={`translate(${-49 * (1 - faceScale)} 0)`}>
+            <circle cx="159" cy="82" r="9" fill={skinColor} />
+            <path d="M 162 80 Q 160 84 162 87" fill="none" stroke={skinShadow} strokeWidth="1.6" strokeLinecap="round" />
+          </g>
         </g>
 
         {/* Legs and shoes — hips tuck up under the shirt hem so there's no
@@ -327,8 +334,18 @@ export function Character({ appearance, pose, state = 'idle', className }: Chara
           <rect x="101" y="116" width="18" height="7" fill={skinShadow} opacity="0.5" />
         </g>
 
-        {/* Head + face — tilts as one unit, pivoting at the neck */}
-        <g className="kb-head" style={jointStyle(angles.headTilt, 110, 120)}>
+        {/* Head + face — tilts as one unit, pivoting at the neck. faceScale
+            narrows the whole head (skull, features, hair, hat) around the
+            center line for a slimmer face. */}
+        <g
+          className="kb-head"
+          style={{
+            transform: `rotate(${angles.headTilt}deg) scale(${faceScale}, 1)`,
+            transformOrigin: '110px 120px',
+            transformBox: 'view-box',
+            transition: SPRINGY,
+          }}
+        >
           {/* Ponytail — painted before the skull so it hangs BEHIND the head
               (but in front of the torso), swinging with the head tilt */}
           {hairStyle === 'ponytail' && (

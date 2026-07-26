@@ -36,6 +36,12 @@ export interface CharacterAppearance {
   umbrellaColor?: string;
   /** Eyelashes at the outer eye corners, plus softer (thinner) brows. */
   lashes?: boolean;
+  /**
+   * Horizontal face width, 1 = the classic rig. 0.85–0.95 slims the whole
+   * head (skull, features, hair, hat) for a narrower, younger face; the
+   * ears slide inward to stay attached.
+   */
+  faceScale?: number;
 }
 
 /**
@@ -62,16 +68,17 @@ export const defaultAppearance: CharacterAppearance = {
 
 /**
  * A "Mary Poppins-ish" look (Ken 2026-07-25 — an original character in
- * that spirit, not the film design; Ken's v2 notes: younger, no skirt,
- * more attractive): chestnut ponytail under a navy flowered hat, lashes,
+ * that spirit, not the film design; Ken's iteration notes: younger, no
+ * skirt, more attractive; then thinner + darker face): dark ponytail
+ * under a navy flowered hat, lashes, slimmed face, warm brown skin,
  * cream blouse with a rose collar bow, slim navy trousers, and a furled
  * umbrella in hand.
  */
 export const nannyAppearance: CharacterAppearance = {
-  skinColor: '#EAC3A2',
-  hairColor: '#6B4A32',
+  skinColor: '#A66A42',
+  hairColor: '#2E211A',
   hairStyle: 'ponytail',
-  eyeColor: '#4A86B8',
+  eyeColor: '#4A3320',
   shirtColor: '#F5F1E6',
   tieColor: '#A63A50',
   pantsColor: '#31405C',
@@ -85,6 +92,7 @@ export const nannyAppearance: CharacterAppearance = {
   umbrella: true,
   umbrellaColor: '#26303B',
   lashes: true,
+  faceScale: 0.9,
 };
 
 /**
