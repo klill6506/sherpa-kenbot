@@ -154,6 +154,7 @@ export function Character({ appearance, pose, state = 'idle', className }: Chara
     skirtColor,
     umbrella = false,
     umbrellaColor = '#26303B',
+    lashes = false,
   } = appearance;
 
   const skinShadow = shade(skinColor, 0.18);
@@ -328,6 +329,17 @@ export function Character({ appearance, pose, state = 'idle', className }: Chara
 
         {/* Head + face — tilts as one unit, pivoting at the neck */}
         <g className="kb-head" style={jointStyle(angles.headTilt, 110, 120)}>
+          {/* Ponytail — painted before the skull so it hangs BEHIND the head
+              (but in front of the torso), swinging with the head tilt */}
+          {hairStyle === 'ponytail' && (
+            <g className="kb-ponytail">
+              <path
+                d="M 146 34 C 170 42 178 74 168 106 C 164 120 154 126 150 112 C 160 88 158 56 142 42 Z"
+                fill={hairColor}
+              />
+              <path d="M 158 60 C 162 76 162 92 158 104" fill="none" stroke={hairShadow} strokeWidth="2" strokeLinecap="round" />
+            </g>
+          )}
           {/* Skull: egg shape, slightly fuller at the jaw for the friendly look */}
           <path
             d="M 62 74 C 62 38 84 22 110 22 C 136 22 158 38 158 74 C 158 106 138 126 110 126 C 82 126 62 106 62 74 Z"
@@ -338,10 +350,11 @@ export function Character({ appearance, pose, state = 'idle', className }: Chara
           <ellipse cx="78" cy="94" rx="8" ry="4.5" fill={blushColor} opacity="0.3" />
           <ellipse cx="142" cy="94" rx="8" ry="4.5" fill={blushColor} opacity="0.3" />
 
-          {/* Eyebrows — the group slides up with browLift */}
+          {/* Eyebrows — the group slides up with browLift; softer (thinner)
+              when lashes are on */}
           <g className="kb-eyebrows" transform={`translate(0 ${browY})`}>
-            <path d="M 77 58 Q 88 52 99 57" fill="none" stroke={browColor} strokeWidth="3.5" strokeLinecap="round" />
-            <path d="M 121 57 Q 132 52 143 58" fill="none" stroke={browColor} strokeWidth="3.5" strokeLinecap="round" />
+            <path d="M 77 58 Q 88 52 99 57" fill="none" stroke={browColor} strokeWidth={lashes ? 2.4 : 3.5} strokeLinecap="round" />
+            <path d="M 121 57 Q 132 52 143 58" fill="none" stroke={browColor} strokeWidth={lashes ? 2.4 : 3.5} strokeLinecap="round" />
           </g>
 
           {/* Eyes — big and Pixar-expressive. The group squashes vertically
@@ -369,6 +382,12 @@ export function Character({ appearance, pose, state = 'idle', className }: Chara
                 <circle cx="88" cy="74" r="3" fill="#26262B" />
                 <circle cx="90.2" cy="71.6" r="1.7" fill="#FFFFFF" />
               </g>
+              {lashes && (
+                <g className="kb-lashes">
+                  <path d="M 77 63 L 72 59" stroke="#2A2A2E" strokeWidth="2" strokeLinecap="round" />
+                  <path d="M 75 68 L 69 65" stroke="#2A2A2E" strokeWidth="2" strokeLinecap="round" />
+                </g>
+              )}
             </g>
             <g className="kb-eye-right">
               <ellipse cx="132" cy="73" rx="13" ry="14" fill="#FDFDFB" />
@@ -383,6 +402,12 @@ export function Character({ appearance, pose, state = 'idle', className }: Chara
                 <circle cx="132" cy="74" r="3" fill="#26262B" />
                 <circle cx="134.2" cy="71.6" r="1.7" fill="#FFFFFF" />
               </g>
+              {lashes && (
+                <g className="kb-lashes">
+                  <path d="M 143 63 L 148 59" stroke="#2A2A2E" strokeWidth="2" strokeLinecap="round" />
+                  <path d="M 145 68 L 151 65" stroke="#2A2A2E" strokeWidth="2" strokeLinecap="round" />
+                </g>
+              )}
             </g>
           </g>
 
@@ -447,6 +472,21 @@ export function Character({ appearance, pose, state = 'idle', className }: Chara
                 {/* The bun above the crown (fully covered when the hat is on) */}
                 <circle cx="110" cy="17" r="11" fill={hairColor} />
                 <path d="M 101 15 Q 110 9 119 15" fill="none" stroke={hairShadow} strokeWidth="1.8" strokeLinecap="round" />
+              </>
+            )}
+            {hairStyle === 'ponytail' && (
+              <>
+                {/* Smooth cap (the tail itself hangs behind the head — see
+                    kb-ponytail at the top of the head group) */}
+                <path
+                  d="M 61 76 C 59 36 84 19 110 19 C 136 19 161 36 159 76 C 158 80 154 80 153 75 C 153 52 136 42 110 42 C 84 42 67 52 67 75 C 66 80 62 80 61 76 Z"
+                  fill={hairColor}
+                />
+                {/* Side-swept fringe */}
+                <path d="M 70 62 C 74 46 88 38 104 40 C 92 46 82 52 78 64 Z" fill={hairColor} />
+                {/* Side sweeps in front of the ears */}
+                <path d="M 62 68 C 59 86 62 96 70 102 C 65 92 65 78 68 66 Z" fill={hairColor} />
+                <path d="M 158 68 C 161 86 158 96 150 102 C 155 92 155 78 152 66 Z" fill={hairColor} />
               </>
             )}
           </g>

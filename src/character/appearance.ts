@@ -4,7 +4,7 @@
  * The demo control panel edits one of these objects live.
  */
 
-export type HairStyle = 'short' | 'buzz' | 'side-part' | 'bun';
+export type HairStyle = 'short' | 'buzz' | 'side-part' | 'bun' | 'ponytail';
 
 export interface CharacterAppearance {
   /** Base skin fill. Shading tones are derived from this automatically. */
@@ -34,6 +34,8 @@ export interface CharacterAppearance {
   /** A furled umbrella resting in the left hand. */
   umbrella?: boolean;
   umbrellaColor?: string;
+  /** Eyelashes at the outer eye corners, plus softer (thinner) brows. */
+  lashes?: boolean;
 }
 
 /**
@@ -59,29 +61,30 @@ export const defaultAppearance: CharacterAppearance = {
 };
 
 /**
- * A prim-British-nanny look (Ken 2026-07-25, "Mary Poppins-ish" — an
- * original character in that spirit, not the film design): dark hair in
- * a bun under a navy flowered hat, cream blouse with a burgundy collar
- * bow, navy A-line skirt, and a furled umbrella in hand.
+ * A "Mary Poppins-ish" look (Ken 2026-07-25 — an original character in
+ * that spirit, not the film design; Ken's v2 notes: younger, no skirt,
+ * more attractive): chestnut ponytail under a navy flowered hat, lashes,
+ * cream blouse with a rose collar bow, slim navy trousers, and a furled
+ * umbrella in hand.
  */
 export const nannyAppearance: CharacterAppearance = {
   skinColor: '#EAC3A2',
-  hairColor: '#4A3628',
-  hairStyle: 'bun',
-  eyeColor: '#3E6B8F',
+  hairColor: '#6B4A32',
+  hairStyle: 'ponytail',
+  eyeColor: '#4A86B8',
   shirtColor: '#F5F1E6',
-  tieColor: '#8E2F3C',
-  pantsColor: '#2E3448',
-  shoeColor: '#2A2126',
+  tieColor: '#A63A50',
+  pantsColor: '#31405C',
+  shoeColor: '#3A2B33',
   glasses: false,
   pocketProtector: false,
   neckwear: 'bow',
   hat: true,
   hatColor: '#26303B',
-  skirt: true,
-  skirtColor: '#31405C',
+  skirt: false,
   umbrella: true,
   umbrellaColor: '#26303B',
+  lashes: true,
 };
 
 /**

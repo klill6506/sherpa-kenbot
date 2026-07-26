@@ -24,7 +24,7 @@ import { mockAsk } from './mockBackend';
  * Both share the same appearance state, so a color tweak updates both.
  */
 
-const HAIR_STYLES: HairStyle[] = ['short', 'buzz', 'side-part', 'bun'];
+const HAIR_STYLES: HairStyle[] = ['short', 'buzz', 'side-part', 'bun', 'ponytail'];
 
 const COLOR_FIELDS: { key: keyof CharacterAppearance; label: string }[] = [
   { key: 'skinColor', label: 'Skin' },
